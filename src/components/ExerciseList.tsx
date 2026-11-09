@@ -1,14 +1,12 @@
-import Ionicons from '@expo/vector-icons/Ionicons';
-import { Image } from 'expo-image';
 import { useFocusEffect } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useCallback, useMemo, useState, type ReactElement } from 'react';
 import { FlatList, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
-import { EXERCISE_MEDIA } from '../data/exerciseMedia';
-import { EQUIPMENT, MUSCLE_IDS, muscleLabel, type Equipment } from '../data/muscles';
+import { EQUIPMENT, MUSCLE_IDS, muscleLabel, type Equipment, type Muscle } from '../data/muscles';
 import { listExercises, type Exercise } from '../db/repositories/exercises';
 import { useColors } from '../theme';
+import { ExerciseThumb } from './ExerciseThumb';
 import { Chip, IconButton, Muted } from './ui';
 
 /** Searchable exercise catalog, filterable by primary muscle. Used by the library and the picker. */
@@ -36,11 +34,20 @@ export function ExerciseList({
 
   const visible = useMemo(() => {
     const q = query.trim().toLocaleLowerCase('es');
-    return exercises.filter(
-      (e) =>
-        (!muscle || e.muscle_primary === muscle) &&
-        (!q || e.name.toLocaleLowerCase('es').includes(q)),
-    );
+    const group = (m: string) => {
+      const i = MUSCLE_IDS.indexOf(m as Muscle);
+      return i === -1 ? MUSCLE_IDS.length : i;
+    };
+    return exercises
+      .filter(
+        (e) =>
+          (!muscle || e.muscle_primary === muscle) &&
+          (!q || e.name.toLocaleLowerCase('es').includes(q)),
+      )
+      .sort(
+        (a, b) =>
+          group(a.muscle_primary) - group(b.muscle_primary) || a.name.localeCompare(b.name, 'es'),
+      );
   }, [exercises, muscle, query]);
 
   return (
@@ -80,7 +87,6 @@ export function ExerciseList({
       }
       ListEmptyComponent={<Muted>No hay ejercicios con ese filtro.</Muted>}
       renderItem={({ item }) => {
-        const media = item.slug ? EXERCISE_MEDIA[item.slug] : undefined;
         return (
           <Pressable
             onPress={() => onSelect(item)}
@@ -88,13 +94,7 @@ export function ExerciseList({
               styles.item,
               { backgroundColor: c.card, borderColor: c.border, opacity: pressed ? 0.6 : 1 },
             ]}>
-            <View style={styles.thumb}>
-              {media ? (
-                <Image source={media.image} autoplay={false} style={styles.thumbImage} />
-              ) : (
-                <Ionicons name="barbell-outline" size={22} color="#9CA3AF" />
-              )}
-            </View>
+            <ExerciseThumb slug={item.slug} size={72} />
             <View style={{ flex: 1, gap: 2 }}>
               <Text style={{ color: c.text, fontWeight: '600', fontSize: 15 }}>{item.name}</Text>
               <Muted>
@@ -131,14 +131,4 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     borderWidth: StyleSheet.hairlineWidth,
   },
-  thumb: {
-    width: 56,
-    height: 56,
-    borderRadius: 8,
-    backgroundColor: '#FFFFFF',
-    alignItems: 'center',
-    justifyContent: 'center',
-    overflow: 'hidden',
-  },
-  thumbImage: { width: 56, height: 56 },
 });

@@ -23,6 +23,8 @@ export interface RoutineExercise {
   routine_day_id: number;
   exercise_id: number;
   exercise_name: string;
+  /** Catalog key for media; null for custom exercises. */
+  exercise_slug: string | null;
   muscle_primary: string;
   position: number;
   target_sets: number;
@@ -123,7 +125,7 @@ export async function getRoutine(db: Db, id: number): Promise<RoutineDetail | nu
     [id],
   );
   const exercises = await db.getAllAsync<RoutineExercise>(
-    `SELECT re.id, re.routine_day_id, re.exercise_id, e.name AS exercise_name,
+    `SELECT re.id, re.routine_day_id, re.exercise_id, e.name AS exercise_name, e.slug AS exercise_slug,
        e.muscle_primary, re.position, re.target_sets, re.rep_min, re.rep_max,
        re.rest_seconds, re.notes
      FROM routine_exercises re
@@ -424,7 +426,7 @@ export async function getRoutineDay(
   );
   if (!day) return null;
   const exercises = await db.getAllAsync<RoutineExercise>(
-    `SELECT re.id, re.routine_day_id, re.exercise_id, e.name AS exercise_name,
+    `SELECT re.id, re.routine_day_id, re.exercise_id, e.name AS exercise_name, e.slug AS exercise_slug,
        e.muscle_primary, re.position, re.target_sets, re.rep_min, re.rep_max,
        re.rest_seconds, re.notes
      FROM routine_exercises re JOIN exercises e ON e.id = re.exercise_id

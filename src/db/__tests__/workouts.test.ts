@@ -119,6 +119,15 @@ describe('workouts', () => {
 });
 
 describe('exercise catalog media', () => {
+  it('every catalog exercise has an animation, two frames and instructions', () => {
+    for (const e of catalog) {
+      const media = EXERCISE_MEDIA[e.slug];
+      expect(media).toBeDefined();
+      expect(media.frames).toHaveLength(2);
+      expect(e.instructions).toMatch(/^1\. /);
+    }
+  });
+
   it('every media entry matches a catalog exercise and its gif_path', async () => {
     for (const [slug, media] of Object.entries(EXERCISE_MEDIA)) {
       const entry = catalog.find((e) => e.slug === slug);

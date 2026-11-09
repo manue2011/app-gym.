@@ -1,8 +1,9 @@
 import { router, Stack, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useCallback, useState } from 'react';
-import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
+import { ExerciseThumb } from '../../src/components/ExerciseThumb';
 import {
   Button,
   Card,
@@ -252,6 +253,12 @@ function ExerciseEditor({
   return (
     <View style={[styles.exercise, { borderColor: c.border }]}>
       <View style={styles.row}>
+        <Pressable
+          onPress={() =>
+            router.push({ pathname: '/ejercicio/[id]', params: { id: String(ex.exercise_id) } })
+          }>
+          <ExerciseThumb slug={ex.exercise_slug} size={52} />
+        </Pressable>
         <View style={{ flex: 1 }}>
           <Text style={{ color: c.text, fontWeight: '600', fontSize: 15 }}>{ex.exercise_name}</Text>
           <Muted>{muscleLabel(ex.muscle_primary)}</Muted>

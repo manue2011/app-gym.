@@ -16,6 +16,7 @@ import {
   View,
 } from 'react-native';
 
+import { ExerciseThumb } from '../../src/components/ExerciseThumb';
 import { RestTimer } from '../../src/components/RestTimer';
 import { Button, Card, Muted } from '../../src/components/ui';
 import { muscleLabel } from '../../src/data/muscles';
@@ -198,6 +199,7 @@ export default function SessionScreen() {
                     params: { id: String(ex.exercise_id) },
                   })
                 }>
+                <ExerciseThumb slug={ex.exercise_slug} size={56} />
                 <View style={{ flex: 1 }}>
                   <Text style={[styles.exerciseName, { color: c.text }]}>{ex.exercise_name}</Text>
                   <Muted>
@@ -289,7 +291,7 @@ export default function SessionScreen() {
 
 const styles = StyleSheet.create({
   content: { padding: 16, gap: 12, paddingBottom: 40 },
-  exerciseHeader: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  exerciseHeader: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   exerciseName: { fontSize: 17, fontWeight: '700' },
   headerRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   setRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },

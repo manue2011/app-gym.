@@ -3,6 +3,7 @@ import { useSQLiteContext } from 'expo-sqlite';
 import { useCallback, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
+import { ExerciseThumb } from '../../src/components/ExerciseThumb';
 import { Button, Card, Chip, Muted, Title } from '../../src/components/ui';
 import { muscleLabel, WEEKDAYS } from '../../src/data/muscles';
 import {
@@ -89,13 +90,16 @@ export default function TodayScreen() {
               onPress={() =>
                 router.push({ pathname: '/ejercicio/[id]', params: { id: String(e.exercise_id) } })
               }>
-              <Text style={{ color: c.text, fontWeight: '600', fontSize: 15 }}>
-                {e.exercise_name}
-              </Text>
-              <Muted>
-                {muscleLabel(e.muscle_primary)} · {e.target_sets} × {e.rep_min}–{e.rep_max} reps ·{' '}
-                {e.rest_seconds} s descanso
-              </Muted>
+              <ExerciseThumb slug={e.exercise_slug} size={56} />
+              <View style={{ flex: 1, gap: 2 }}>
+                <Text style={{ color: c.text, fontWeight: '600', fontSize: 15 }}>
+                  {e.exercise_name}
+                </Text>
+                <Muted>
+                  {muscleLabel(e.muscle_primary)} · {e.target_sets} × {e.rep_min}–{e.rep_max} reps ·{' '}
+                  {e.rest_seconds} s descanso
+                </Muted>
+              </View>
             </Pressable>
           ))}
           {!openWorkout && day.exercises.length > 0 && (
@@ -130,5 +134,5 @@ export default function TodayScreen() {
 const styles = StyleSheet.create({
   content: { padding: 16, gap: 12 },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
-  exercise: { gap: 2, paddingVertical: 4 },
+  exercise: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 4 },
 });

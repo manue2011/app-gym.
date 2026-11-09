@@ -44,3 +44,11 @@ example
 
 # IDE
 .idea/
+
+# Media build downloads
+scripts/media/ex.json
+scripts/media/tree.json
+scripts/media/md/
+scripts/media/png/[0-9]*
+scripts/media/__pycache__/
+scripts/media/own.png
