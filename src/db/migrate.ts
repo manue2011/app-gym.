@@ -14,21 +14,34 @@ export async function migrate(db: Db): Promise<void> {
   }
 }
 
-/** Inserts catalog exercises that are not in the database yet (matched by slug). */
+/**
+ * Syncs the built-in catalog by slug: inserts new exercises and refreshes names, media and
+ * instructions of existing ones. Custom exercises (slug NULL) are never touched.
+ */
 export async function seedExercises(db: Db): Promise<void> {
   const createdAt = nowIso();
   await db.withTransactionAsync(async () => {
     for (const e of catalog) {
       await db.runAsync(
-        `INSERT OR IGNORE INTO exercises
-           (slug, name, muscle_primary, muscles_secondary, equipment, is_custom, created_at)
-         VALUES (?, ?, ?, ?, ?, 0, ?)`,
+        `INSERT INTO exercises
+           (slug, name, muscle_primary, muscles_secondary, equipment, gif_path, instructions,
+            is_custom, created_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?)
+         ON CONFLICT (slug) DO UPDATE SET
+           name = excluded.name,
+           muscle_primary = excluded.muscle_primary,
+           muscles_secondary = excluded.muscles_secondary,
+           equipment = excluded.equipment,
+           gif_path = excluded.gif_path,
+           instructions = excluded.instructions`,
         [
           e.slug,
           e.name,
           e.muscle_primary,
           JSON.stringify(e.muscles_secondary),
           e.equipment,
+          e.gif_path,
+          e.instructions,
           createdAt,
         ],
       );

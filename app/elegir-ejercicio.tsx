@@ -76,7 +76,13 @@ export default function PickExerciseScreen() {
     />
   );
 
-  return <ExerciseList header={header} onSelect={(e) => add(e.id)} />;
+  return (
+    <ExerciseList
+      header={header}
+      onSelect={(e) => add(e.id)}
+      onInfo={(e) => router.push({ pathname: '/ejercicio/[id]', params: { id: String(e.id) } })}
+    />
+  );
 }
 
 const styles = StyleSheet.create({

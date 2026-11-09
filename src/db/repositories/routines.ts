@@ -411,3 +411,25 @@ export async function reorderExercises(db: Db, dayId: number, orderedIds: number
 export function dayForWeekday(routine: RoutineDetail, weekday: number) {
   return routine.days.find((d) => d.weekday === weekday) ?? null;
 }
+
+/** A single day with its exercises, including soft-deleted days (for past workouts). */
+export async function getRoutineDay(
+  db: Db,
+  dayId: number,
+): Promise<(RoutineDay & { routine_name: string; exercises: RoutineExercise[] }) | null> {
+  const day = await db.getFirstAsync<RoutineDay & { routine_name: string }>(
+    `SELECT d.id, d.routine_id, d.name, d.weekday, d.position, r.name AS routine_name
+     FROM routine_days d JOIN routines r ON r.id = d.routine_id WHERE d.id = ?`,
+    [dayId],
+  );
+  if (!day) return null;
+  const exercises = await db.getAllAsync<RoutineExercise>(
+    `SELECT re.id, re.routine_day_id, re.exercise_id, e.name AS exercise_name,
+       e.muscle_primary, re.position, re.target_sets, re.rep_min, re.rep_max,
+       re.rest_seconds, re.notes
+     FROM routine_exercises re JOIN exercises e ON e.id = re.exercise_id
+     WHERE re.routine_day_id = ? ORDER BY re.position`,
+    [dayId],
+  );
+  return { ...day, exercises };
+}

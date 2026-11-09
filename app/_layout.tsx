@@ -17,11 +17,20 @@ export default function RootLayout() {
           contentStyle: { backgroundColor: c.background },
           headerBackTitle: 'Atrás',
         }}>
+        <Stack.Screen name="aviso" options={{ headerShown: false, gestureEnabled: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="rutina/[id]" options={{ title: 'Editar rutina' }} />
         <Stack.Screen
           name="elegir-ejercicio"
           options={{ title: 'Añadir ejercicio', presentation: 'modal' }}
+        />
+        <Stack.Screen
+          name="ejercicio/[id]"
+          options={{ title: 'Ejercicio', presentation: 'modal' }}
+        />
+        <Stack.Screen
+          name="sesion/[id]"
+          options={{ title: 'Entrenamiento', gestureEnabled: false }}
         />
       </Stack>
     </SQLiteProvider>

@@ -2,6 +2,8 @@ import { nowIso, type Db } from '../types';
 
 export interface Exercise {
   id: number;
+  /** Stable key of built-in exercises; null for custom ones. */
+  slug: string | null;
   name: string;
   muscle_primary: string;
   muscles_secondary: string[];
@@ -23,7 +25,7 @@ const toExercise = (r: ExerciseRow): Exercise => ({
   is_custom: r.is_custom === 1,
 });
 
-const COLUMNS = `id, name, muscle_primary, muscles_secondary, equipment, gif_path,
+const COLUMNS = `id, slug, name, muscle_primary, muscles_secondary, equipment, gif_path,
   instructions, common_mistakes, is_custom`;
 
 export async function listExercises(db: Db, muscle?: string): Promise<Exercise[]> {

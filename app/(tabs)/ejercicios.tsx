@@ -1,6 +1,10 @@
+import { router } from 'expo-router';
+
 import { ExerciseList } from '../../src/components/ExerciseList';
 
-// GIFs and exercise details come in roadmap step 3.
+const openExercise = (id: number) =>
+  router.push({ pathname: '/ejercicio/[id]', params: { id: String(id) } });
+
 export default function ExercisesScreen() {
-  return <ExerciseList />;
+  return <ExerciseList onSelect={(e) => openExercise(e.id)} />;
 }
