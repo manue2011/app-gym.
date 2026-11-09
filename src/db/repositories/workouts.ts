@@ -163,3 +163,81 @@ export function prefillFor(last: WorkoutSet[], setNumber: number): SetInput | nu
   const s = last.find((x) => x.set_number === setNumber) ?? last[last.length - 1];
   return s ? { weight_kg: s.weight_kg, reps: s.reps, rir: s.rir } : null;
 }
+
+// ---------- Progress ----------
+
+export interface LoggedExercise {
+  exercise_id: number;
+  name: string;
+  slug: string | null;
+  muscle_primary: string;
+  sessions: number;
+  last_at: string;
+}
+
+/** Exercises with at least one logged set, most recently trained first. */
+export async function listLoggedExercises(db: Db): Promise<LoggedExercise[]> {
+  return db.getAllAsync<LoggedExercise>(
+    `SELECT e.id AS exercise_id, e.name, e.slug, e.muscle_primary,
+       COUNT(DISTINCT s.workout_id) AS sessions, MAX(s.completed_at) AS last_at
+     FROM workout_sets s JOIN exercises e ON e.id = s.exercise_id
+     GROUP BY e.id ORDER BY last_at DESC`,
+    [],
+  );
+}
+
+export interface SessionSummary {
+  workout_id: number;
+  started_at: string;
+  sets: { weight_kg: number; reps: number }[];
+  /** Heaviest weight lifted and the most reps done with it. */
+  top_weight_kg: number;
+  top_weight_reps: number;
+  total_reps: number;
+  /** Sum of weight × reps. */
+  volume_kg: number;
+}
+
+type HistoryRow = Pick<WorkoutSet, 'workout_id' | 'set_number' | 'weight_kg' | 'reps'> & {
+  started_at: string;
+};
+
+/** Groups logged sets into one summary per workout, oldest first. */
+export function summarizeSessions(rows: HistoryRow[]): SessionSummary[] {
+  const byWorkout = new Map<number, SessionSummary>();
+  for (const r of rows) {
+    let s = byWorkout.get(r.workout_id);
+    if (!s) {
+      s = {
+        workout_id: r.workout_id,
+        started_at: r.started_at,
+        sets: [],
+        top_weight_kg: 0,
+        top_weight_reps: 0,
+        total_reps: 0,
+        volume_kg: 0,
+      };
+      byWorkout.set(r.workout_id, s);
+    }
+    s.sets.push({ weight_kg: r.weight_kg, reps: r.reps });
+    s.total_reps += r.reps;
+    s.volume_kg += r.weight_kg * r.reps;
+    if (r.weight_kg > s.top_weight_kg) {
+      s.top_weight_kg = r.weight_kg;
+      s.top_weight_reps = r.reps;
+    } else if (r.weight_kg === s.top_weight_kg) {
+      s.top_weight_reps = Math.max(s.top_weight_reps, r.reps);
+    }
+  }
+  return [...byWorkout.values()].sort((a, b) => a.started_at.localeCompare(b.started_at));
+}
+
+export async function getExerciseHistory(db: Db, exerciseId: number): Promise<SessionSummary[]> {
+  const rows = await db.getAllAsync<HistoryRow>(
+    `SELECT s.workout_id, s.set_number, s.weight_kg, s.reps, w.started_at
+     FROM workout_sets s JOIN workouts w ON w.id = s.workout_id
+     WHERE s.exercise_id = ? ORDER BY w.started_at, s.set_number`,
+    [exerciseId],
+  );
+  return summarizeSessions(rows);
+}

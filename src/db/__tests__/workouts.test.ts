@@ -14,9 +14,11 @@ import {
   deleteSet,
   discardEmptyWorkout,
   finishWorkout,
+  getExerciseHistory,
   getLastPerformance,
   getOpenWorkout,
   getWorkoutSets,
+  listLoggedExercises,
   logSet,
   prefillFor,
   startWorkout,
@@ -115,6 +117,37 @@ describe('workouts', () => {
     );
     expect(validateSet({ weight_kg: 50, reps: 8, rir: 6 })).toBe('El RIR debe estar entre 0 y 5.');
     expect(validateSet({ weight_kg: 0, reps: 12, rir: null })).toBeNull();
+  });
+});
+
+describe('progress', () => {
+  it('summarizes each session: top weight, reps at that weight and volume', async () => {
+    const first = await startWorkout(db, dayId);
+    await set(first, 1, 60, 10);
+    await set(first, 2, 65, 6);
+    await set(first, 3, 65, 8);
+    await finishWorkout(db, first);
+    const second = await startWorkout(db, dayId);
+    await set(second, 1, 70, 5);
+
+    const history = await getExerciseHistory(db, benchId);
+    expect(history.map((h) => h.workout_id)).toEqual([first, second]);
+    expect(history[0]).toMatchObject({
+      top_weight_kg: 65,
+      top_weight_reps: 8,
+      total_reps: 24,
+      volume_kg: 60 * 10 + 65 * 6 + 65 * 8,
+    });
+    expect(history[0].sets).toHaveLength(3);
+    expect(history[1]).toMatchObject({ top_weight_kg: 70, top_weight_reps: 5 });
+
+    const logged = await listLoggedExercises(db);
+    expect(logged).toEqual([expect.objectContaining({ exercise_id: benchId, sessions: 2 })]);
+  });
+
+  it('returns nothing for exercises never logged', async () => {
+    expect(await getExerciseHistory(db, benchId)).toEqual([]);
+    expect(await listLoggedExercises(db)).toEqual([]);
   });
 });
 
