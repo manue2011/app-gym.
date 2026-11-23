@@ -1,7 +1,7 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { Tabs } from 'expo-router';
+import { router, Tabs } from 'expo-router';
 import type { ComponentProps } from 'react';
-import type { ColorValue } from 'react-native';
+import { Pressable, type ColorValue } from 'react-native';
 
 import { useColors } from '../../src/theme';
 
@@ -23,6 +23,16 @@ export default function TabsLayout() {
         headerStyle: { backgroundColor: c.card },
         headerTintColor: c.text,
         sceneStyle: { backgroundColor: c.background },
+        headerRight: () => (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Recomendaciones científicas"
+            hitSlop={8}
+            style={{ paddingHorizontal: 16 }}
+            onPress={() => router.push('/por-que')}>
+            <Ionicons name="school-outline" size={22} color={c.primary} />
+          </Pressable>
+        ),
       }}>
       <Tabs.Screen name="hoy" options={{ title: 'Hoy', tabBarIcon: icon('today-outline') }} />
       <Tabs.Screen

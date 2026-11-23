@@ -4,6 +4,7 @@ import { useCallback, useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { ExerciseThumb } from '../../src/components/ExerciseThumb';
+import { WhyLink } from '../../src/components/WhyLink';
 import {
   Button,
   Card,
@@ -12,6 +13,7 @@ import {
   IconButton,
   Muted,
   NumberField,
+  Title,
 } from '../../src/components/ui';
 import { muscleLabel, WEEKDAY_ORDER, WEEKDAYS, WEEKDAYS_SHORT } from '../../src/data/muscles';
 import {
@@ -28,6 +30,13 @@ import {
   type RoutineDetail,
   type RoutineExercise,
 } from '../../src/db/repositories/routines';
+import {
+  repRangeWarnings,
+  volumeWarnings,
+  weeklyVolume,
+  type RoutineWarning,
+} from '../../src/science/routineAnalysis';
+import { MIN_WEEKLY_SETS, type RuleId } from '../../src/science/rules';
 import { useRoutinesStore } from '../../src/store/routines';
 import { useColors } from '../../src/theme';
 
@@ -129,6 +138,8 @@ export default function RoutineEditorScreen() {
           />
         )}
       </Card>
+
+      <WeeklySummary routine={routine} />
 
       {routine.days.map((day, dayIndex) => (
         <Card key={day.id}>
@@ -234,6 +245,59 @@ export default function RoutineEditorScreen() {
   );
 }
 
+/** Planned weekly sets per muscle, with evidence-based warnings. */
+function WeeklySummary({ routine }: { routine: RoutineDetail }) {
+  const c = useColors();
+  const volume = weeklyVolume(routine.days);
+  if (volume.length === 0) return null;
+  const warnings = [...volumeWarnings(volume, muscleLabel), ...repRangeWarnings(routine.days)];
+  const byRule = new Map<RuleId, RoutineWarning[]>();
+  for (const w of warnings) byRule.set(w.rule, [...(byRule.get(w.rule) ?? []), w]);
+  const heading: Record<string, string> = {
+    volume: 'Poco volumen',
+    frequency: 'Poca frecuencia',
+    repRange: 'Repeticiones fuera de rango',
+  };
+
+  return (
+    <Card>
+      <View style={styles.row}>
+        <View style={{ flex: 1 }}>
+          <Title>Resumen semanal</Title>
+        </View>
+        <WhyLink rule="volume" />
+      </View>
+      <Muted>Series por semana del músculo principal de cada ejercicio.</Muted>
+      {volume.map((v) => (
+        <View key={v.muscle} style={styles.row}>
+          <Text style={{ color: c.text, flex: 1 }}>{muscleLabel(v.muscle)}</Text>
+          <Text
+            style={{
+              color: v.sets < MIN_WEEKLY_SETS ? c.danger : c.text,
+              fontWeight: '600',
+            }}>
+            {v.sets} series · {v.days === 1 ? '1 día' : `${v.days} días`}
+          </Text>
+        </View>
+      ))}
+      {[...byRule].map(([rule, list]) => (
+        <View key={rule} style={[styles.warning, { backgroundColor: c.chip }]}>
+          <View style={styles.row}>
+            <Text style={{ color: c.text, fontWeight: '700', flex: 1 }}>⚠️ {heading[rule]}</Text>
+            <WhyLink rule={rule} />
+          </View>
+          {list.map((w) => (
+            <Muted key={w.message}>{w.message}</Muted>
+          ))}
+        </View>
+      ))}
+      {warnings.length === 0 && (
+        <Muted>✅ Volumen, frecuencia y repeticiones dentro de lo recomendado.</Muted>
+      )}
+    </Card>
+  );
+}
+
 function ExerciseEditor({
   exercise: ex,
   isFirst,
@@ -307,4 +371,5 @@ const styles = StyleSheet.create({
   dayName: { flex: 1, fontSize: 16, fontWeight: '700' },
   exercise: { borderTopWidth: StyleSheet.hairlineWidth, paddingTop: 10, gap: 8 },
   footer: { flexDirection: 'row', gap: 12, marginTop: 8 },
+  warning: { borderRadius: 10, padding: 10, gap: 4 },
 });

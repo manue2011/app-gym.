@@ -28,6 +28,7 @@ export default function RootLayout() {
           name="ejercicio/[id]"
           options={{ title: 'Ejercicio', presentation: 'modal' }}
         />
+        <Stack.Screen name="por-que" options={{ title: '¿Por qué?', presentation: 'modal' }} />
         <Stack.Screen
           name="sesion/[id]"
           options={{ title: 'Entrenamiento', gestureEnabled: false }}

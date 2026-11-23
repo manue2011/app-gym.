@@ -18,6 +18,7 @@ import {
 
 import { ExerciseThumb } from '../../src/components/ExerciseThumb';
 import { RestTimer } from '../../src/components/RestTimer';
+import { WhyLink } from '../../src/components/WhyLink';
 import { Button, Card, Muted } from '../../src/components/ui';
 import { muscleLabel } from '../../src/data/muscles';
 import { getRoutineDay, type RoutineExercise } from '../../src/db/repositories/routines';
@@ -32,6 +33,8 @@ import {
   type Workout,
   type WorkoutSet,
 } from '../../src/db/repositories/workouts';
+import { suggestOverload } from '../../src/science/overload';
+import { MAX_RECOMMENDED_RIR } from '../../src/science/rules';
 import { useColors } from '../../src/theme';
 
 interface Draft {
@@ -189,6 +192,14 @@ export default function SessionScreen() {
           );
           const rows = Math.max(ex.target_sets + (extraSets[ex.exercise_id] ?? 0), maxLogged);
           const last = data.last[ex.exercise_id] ?? [];
+          const suggestion = suggestOverload(last, ex);
+          const highRir = data.sets.some(
+            (s) =>
+              s.exercise_id === ex.exercise_id && s.rir !== null && s.rir > MAX_RECOMMENDED_RIR,
+          );
+          const pending = Array.from({ length: rows }, (_, i) => i + 1).filter(
+            (n) => !logged(ex.exercise_id, n),
+          );
           return (
             <Card key={ex.id}>
               <Pressable
@@ -218,6 +229,42 @@ export default function SessionScreen() {
                 <Muted>Primera vez con este ejercicio.</Muted>
               )}
               {ex.notes && <Muted>📝 {ex.notes}</Muted>}
+              {suggestion && (
+                <View style={[styles.hint, { backgroundColor: c.chip }]}>
+                  <Text style={{ color: c.text }}>
+                    💡 La última vez llegaste a {ex.rep_max} reps en todas las series. Puedes probar
+                    con {formatKg(suggestion.toKg)} kg (antes {formatKg(suggestion.fromKg)} kg).
+                  </Text>
+                  <View style={styles.hintActions}>
+                    {pending.length > 0 && (
+                      <Pressable
+                        accessibilityRole="button"
+                        hitSlop={8}
+                        onPress={() =>
+                          pending.forEach((n) =>
+                            editDraft(ex.exercise_id, n, { weight: formatKg(suggestion.toKg) }),
+                          )
+                        }>
+                        <Text style={{ color: c.primary, fontWeight: '700' }}>
+                          Usar {formatKg(suggestion.toKg)} kg
+                        </Text>
+                      </Pressable>
+                    )}
+                    <WhyLink rule="overload" />
+                  </View>
+                </View>
+              )}
+              {highRir && (
+                <View style={[styles.hint, { backgroundColor: c.chip }]}>
+                  <Text style={{ color: c.text }}>
+                    Te quedaron más de {MAX_RECOMMENDED_RIR} reps en reserva. Para ganar músculo,
+                    acércate un poco más al fallo (RIR 0–{MAX_RECOMMENDED_RIR}).
+                  </Text>
+                  <View style={styles.hintActions}>
+                    <WhyLink rule="proximity" />
+                  </View>
+                </View>
+              )}
 
               <View style={styles.headerRow}>
                 <Text style={[styles.colSet, styles.colLabel, { color: c.muted }]}>Serie</Text>
@@ -281,7 +328,14 @@ export default function SessionScreen() {
             </Card>
           );
         })}
-        <Muted>RIR = repeticiones que te quedaban en reserva (0 = al fallo). Es opcional.</Muted>
+        <View style={styles.hintActions}>
+          <View style={{ flex: 1 }}>
+            <Muted>
+              RIR = repeticiones que te quedaban en reserva (0 = al fallo). Es opcional.
+            </Muted>
+          </View>
+          <WhyLink rule="proximity" />
+        </View>
         <Button label="Terminar entrenamiento" icon="flag-outline" onPress={finish} />
       </ScrollView>
       <RestTimer endAt={restEndAt} onChange={setRestEndAt} />
@@ -299,6 +353,8 @@ const styles = StyleSheet.create({
   colSet: { width: 40, textAlign: 'center' },
   colInput: { flex: 1 },
   colCheck: { width: 40, alignItems: 'center' },
+  hint: { borderRadius: 10, padding: 10, gap: 6 },
+  hintActions: { flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: 16 },
   input: {
     borderWidth: StyleSheet.hairlineWidth,
     borderRadius: 8,
