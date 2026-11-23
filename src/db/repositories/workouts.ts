@@ -72,14 +72,23 @@ export async function finishWorkout(db: Db, id: number, notes?: string): Promise
   ]);
 }
 
-/** Deletes an unfinished workout only if no set was logged, so history is never lost. */
-export async function discardEmptyWorkout(db: Db, id: number): Promise<boolean> {
-  const res = await db.runAsync(
-    `DELETE FROM workouts WHERE id = ? AND finished_at IS NULL
-     AND NOT EXISTS (SELECT 1 FROM workout_sets WHERE workout_id = ?)`,
-    [id, id],
-  );
-  return res.changes > 0;
+/**
+ * Deletes an unfinished workout and its sets, when the user chooses not to keep it.
+ * Finished workouts are history and are never deleted here.
+ */
+export async function discardOpenWorkout(db: Db, id: number): Promise<boolean> {
+  let deleted = false;
+  await db.withTransactionAsync(async () => {
+    const open = await db.getFirstAsync<{ id: number }>(
+      'SELECT id FROM workouts WHERE id = ? AND finished_at IS NULL',
+      [id],
+    );
+    if (!open) return;
+    await db.runAsync('DELETE FROM workout_sets WHERE workout_id = ?', [id]);
+    await db.runAsync('DELETE FROM workouts WHERE id = ?', [id]);
+    deleted = true;
+  });
+  return deleted;
 }
 
 export async function getWorkoutSets(db: Db, workoutId: number): Promise<WorkoutSet[]> {

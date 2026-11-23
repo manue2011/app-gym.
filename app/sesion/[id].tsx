@@ -27,7 +27,7 @@ import {
   type RoutineExercise,
 } from '../../src/db/repositories/routines';
 import {
-  discardEmptyWorkout,
+  discardOpenWorkout,
   finishWorkout,
   getLastPerformance,
   getWorkout,
@@ -139,23 +139,29 @@ export default function SessionScreen() {
     if (ex.rest_seconds > 0) setRestEndAt(restEndsAt(ex.rest_seconds));
   };
 
+  /** Leaves without saving anything from this workout. */
+  const discard = () =>
+    Alert.alert(
+      'Descartar entrenamiento',
+      data.sets.length === 0
+        ? 'No registraste ninguna serie. ¿Salir sin guardar este entrenamiento?'
+        : `Se borrarán las ${data.sets.length} series que marcaste hoy y no quedará en tu historial. ¿Descartar?`,
+      [
+        { text: 'Seguir entrenando', style: 'cancel' },
+        {
+          text: 'Descartar',
+          style: 'destructive',
+          onPress: async () => {
+            await discardOpenWorkout(db, workoutId);
+            router.back();
+          },
+        },
+      ],
+    );
+
   const finish = () => {
     if (data.sets.length === 0) {
-      Alert.alert(
-        'Salir sin guardar',
-        'No registraste ninguna serie. ¿Descartar este entrenamiento?',
-        [
-          { text: 'Seguir entrenando', style: 'cancel' },
-          {
-            text: 'Descartar',
-            style: 'destructive',
-            onPress: async () => {
-              await discardEmptyWorkout(db, workoutId);
-              router.back();
-            },
-          },
-        ],
-      );
+      discard();
       return;
     }
     Alert.alert('Terminar entrenamiento', `Guardaste ${data.sets.length} series. ¿Terminar?`, [
@@ -341,6 +347,12 @@ export default function SessionScreen() {
           <WhyLink rule="proximity" />
         </View>
         <Button label="Terminar entrenamiento" icon="flag-outline" onPress={finish} />
+        <Button
+          label="Descartar entrenamiento"
+          icon="trash-outline"
+          variant="danger"
+          onPress={discard}
+        />
       </ScrollView>
       <RestTimer endAt={restEndAt} onChange={setRestEndAt} />
     </KeyboardAvoidingView>

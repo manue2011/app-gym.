@@ -12,7 +12,7 @@ import {
 } from '../repositories/routines';
 import {
   deleteSet,
-  discardEmptyWorkout,
+  discardOpenWorkout,
   finishWorkout,
   getExerciseHistory,
   getLastPerformance,
@@ -68,14 +68,18 @@ describe('workouts', () => {
     expect(await getWorkoutSets(db, w)).toEqual([]);
   });
 
-  it('only discards workouts without sets', async () => {
-    const empty = await startWorkout(db, dayId);
-    expect(await discardEmptyWorkout(db, empty)).toBe(true);
+  it('discards an open workout with its sets, but never a finished one', async () => {
+    const open = await startWorkout(db, dayId);
+    await set(open, 1, 60, 10);
+    expect(await discardOpenWorkout(db, open)).toBe(true);
+    expect(await getOpenWorkout(db)).toBeNull();
+    expect(await getWorkoutSets(db, open)).toEqual([]);
 
-    const w = await startWorkout(db, dayId);
-    await set(w, 1, 60, 10);
-    expect(await discardEmptyWorkout(db, w)).toBe(false);
-    expect(await getWorkoutSets(db, w)).toHaveLength(1);
+    const done = await startWorkout(db, dayId);
+    await set(done, 1, 60, 10);
+    await finishWorkout(db, done);
+    expect(await discardOpenWorkout(db, done)).toBe(false);
+    expect(await getWorkoutSets(db, done)).toHaveLength(1);
   });
 
   it('pre-fills from the previous workout, not the current one', async () => {

@@ -1,7 +1,7 @@
 import { router, useFocusEffect } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useCallback, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { ExerciseThumb } from '../../src/components/ExerciseThumb';
 import { Button, Card, Chip, Muted, Title } from '../../src/components/ui';
@@ -12,7 +12,12 @@ import {
   getActiveRoutine,
   type RoutineDetail,
 } from '../../src/db/repositories/routines';
-import { getOpenWorkout, startWorkout, type Workout } from '../../src/db/repositories/workouts';
+import {
+  discardOpenWorkout,
+  getOpenWorkout,
+  startWorkout,
+  type Workout,
+} from '../../src/db/repositories/workouts';
 import { useColors } from '../../src/theme';
 
 const openSession = (id: number) =>
@@ -61,6 +66,28 @@ export default function TodayScreen() {
           <Title>Entrenamiento en curso</Title>
           <Muted>Lo dejaste a medias. Tus series ya están guardadas.</Muted>
           <Button label="Continuar" icon="play" onPress={() => openSession(openWorkout.id)} />
+          <Button
+            label="Descartar"
+            icon="trash-outline"
+            variant="danger"
+            onPress={() =>
+              Alert.alert(
+                'Descartar entrenamiento',
+                'Se borrará este entrenamiento y las series que marcaste. No quedará en tu historial.',
+                [
+                  { text: 'Cancelar', style: 'cancel' },
+                  {
+                    text: 'Descartar',
+                    style: 'destructive',
+                    onPress: async () => {
+                      await discardOpenWorkout(db, openWorkout.id);
+                      setOpenWorkout(null);
+                    },
+                  },
+                ],
+              )
+            }
+          />
         </Card>
       )}
 
