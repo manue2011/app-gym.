@@ -1,12 +1,21 @@
+import { Image } from 'expo-image';
 import { Stack } from 'expo-router';
 import { SQLiteProvider } from 'expo-sqlite';
+import Storage from 'expo-sqlite/kv-store';
 import { StatusBar } from 'expo-status-bar';
+import { useEffect } from 'react';
 
+import { IMAGE_CACHE_CLEARED_KEY } from '../src/data/settings';
 import { initDatabase } from '../src/db/migrate';
 import { useColors } from '../src/theme';
 
 export default function RootLayout() {
   const c = useColors();
+  useEffect(() => {
+    // Older builds disk-cached bundled images by resource id; clear them once (see ExerciseThumb).
+    if (Storage.getItemSync(IMAGE_CACHE_CLEARED_KEY)) return;
+    Image.clearDiskCache().then(() => Storage.setItemSync(IMAGE_CACHE_CLEARED_KEY, '1'));
+  }, []);
   return (
     <SQLiteProvider databaseName="app_gym.db" onInit={initDatabase}>
       <StatusBar style="auto" />

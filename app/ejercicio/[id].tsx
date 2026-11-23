@@ -4,6 +4,7 @@ import { useSQLiteContext } from 'expo-sqlite';
 import { useEffect, useState } from 'react';
 import { Linking, ScrollView, StyleSheet, Text, View } from 'react-native';
 
+import { BUNDLED_IMAGE_CACHE } from '../../src/components/ExerciseThumb';
 import { Card, Chip, Muted, Title } from '../../src/components/ui';
 import { EXERCISE_MEDIA, type MediaCredit } from '../../src/data/exerciseMedia';
 import { EQUIPMENT, muscleLabel, type Equipment } from '../../src/data/muscles';
@@ -72,6 +73,7 @@ export default function ExerciseDetailScreen() {
                 source={media.animation}
                 style={styles.image}
                 contentFit="contain"
+                cachePolicy={BUNDLED_IMAGE_CACHE}
                 accessibilityLabel={`Animación de ${exercise.name}`}
               />
             </View>
@@ -82,6 +84,7 @@ export default function ExerciseDetailScreen() {
                   source={frame}
                   style={styles.image}
                   contentFit="contain"
+                  cachePolicy={BUNDLED_IMAGE_CACHE}
                   accessibilityLabel={`${exercise.name}: ${i === 0 ? 'músculo estirado' : 'músculo contraído'}`}
                 />
                 <Text style={styles.stepBadge}>
