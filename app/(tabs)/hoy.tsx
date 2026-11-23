@@ -8,6 +8,7 @@ import { Button, Card, Chip, Muted, Title } from '../../src/components/ui';
 import { muscleLabel, WEEKDAYS } from '../../src/data/muscles';
 import {
   dayForWeekday,
+  formatRepRange,
   getActiveRoutine,
   type RoutineDetail,
 } from '../../src/db/repositories/routines';
@@ -96,7 +97,7 @@ export default function TodayScreen() {
                   {e.exercise_name}
                 </Text>
                 <Muted>
-                  {muscleLabel(e.muscle_primary)} · {e.target_sets} × {e.rep_min}–{e.rep_max} reps ·{' '}
+                  {muscleLabel(e.muscle_primary)} · {e.target_sets} × {formatRepRange(e)} reps ·{' '}
                   {e.rest_seconds} s descanso
                 </Muted>
               </View>

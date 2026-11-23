@@ -21,7 +21,11 @@ import { RestTimer } from '../../src/components/RestTimer';
 import { WhyLink } from '../../src/components/WhyLink';
 import { Button, Card, Muted } from '../../src/components/ui';
 import { muscleLabel } from '../../src/data/muscles';
-import { getRoutineDay, type RoutineExercise } from '../../src/db/repositories/routines';
+import {
+  formatRepRange,
+  getRoutineDay,
+  type RoutineExercise,
+} from '../../src/db/repositories/routines';
 import {
   discardEmptyWorkout,
   finishWorkout,
@@ -214,8 +218,8 @@ export default function SessionScreen() {
                 <View style={{ flex: 1 }}>
                   <Text style={[styles.exerciseName, { color: c.text }]}>{ex.exercise_name}</Text>
                   <Muted>
-                    {muscleLabel(ex.muscle_primary)} · objetivo {ex.target_sets} × {ex.rep_min}–
-                    {ex.rep_max} · {loggedCount}/{ex.target_sets} hechas
+                    {muscleLabel(ex.muscle_primary)} · objetivo {ex.target_sets} ×{' '}
+                    {formatRepRange(ex)} · {loggedCount}/{ex.target_sets} hechas
                   </Muted>
                 </View>
                 <Ionicons name="play-circle-outline" size={28} color={c.primary} />

@@ -56,6 +56,10 @@ export const DEFAULT_TARGETS: ExerciseTargets = {
   notes: null,
 };
 
+/** "8–12", or just "12" when both ends are equal. */
+export const formatRepRange = (t: { rep_min: number; rep_max: number }) =>
+  t.rep_min === t.rep_max ? String(t.rep_max) : `${t.rep_min}–${t.rep_max}`;
+
 /** Returns a user-facing error message, or null when the targets are valid. */
 export function validateTargets(t: ExerciseTargets): string | null {
   const ints = [t.target_sets, t.rep_min, t.rep_max, t.rest_seconds];
