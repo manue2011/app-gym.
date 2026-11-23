@@ -318,6 +318,25 @@ export const EXERCISE_MEDIA: Record<string, ExerciseMedia> = {
       licenseUrl: 'https://creativecommons.org/licenses/by-sa/4.0/',
     },
   },
+  'underhand-pulldown': {
+    animation: require('../../assets/gifs/underhand-pulldown.gif'),
+    frames: [
+      require('../../assets/gifs/underhand-pulldown-1.webp'),
+      require('../../assets/gifs/underhand-pulldown-2.webp'),
+    ],
+    imageCredit: {
+      source: 'Everkinetic',
+      author: 'Greg Priday (everkinetic.com)',
+      license: 'CC BY-SA 4.0',
+      licenseUrl: 'https://creativecommons.org/licenses/by-sa/4.0/',
+    },
+    textCredit: {
+      source: 'Everkinetic',
+      author: 'adaptado y traducido por App Gym',
+      license: 'CC BY-SA 4.0',
+      licenseUrl: 'https://creativecommons.org/licenses/by-sa/4.0/',
+    },
+  },
   'v-bar-pulldown': {
     animation: require('../../assets/gifs/v-bar-pulldown.gif'),
     frames: [
@@ -679,6 +698,44 @@ export const EXERCISE_MEDIA: Record<string, ExerciseMedia> = {
       licenseUrl: 'https://creativecommons.org/licenses/by-sa/4.0/',
     },
   },
+  'machine-rear-delt-fly': {
+    animation: require('../../assets/gifs/machine-rear-delt-fly.gif'),
+    frames: [
+      require('../../assets/gifs/machine-rear-delt-fly-1.webp'),
+      require('../../assets/gifs/machine-rear-delt-fly-2.webp'),
+    ],
+    imageCredit: {
+      source: 'App Gym',
+      author: 'ilustración propia',
+      license: 'CC BY-SA 4.0',
+      licenseUrl: 'https://creativecommons.org/licenses/by-sa/4.0/',
+    },
+    textCredit: {
+      source: 'App Gym',
+      author: 'texto propio',
+      license: 'CC BY-SA 4.0',
+      licenseUrl: 'https://creativecommons.org/licenses/by-sa/4.0/',
+    },
+  },
+  'plate-front-raise': {
+    animation: require('../../assets/gifs/plate-front-raise.gif'),
+    frames: [
+      require('../../assets/gifs/plate-front-raise-1.webp'),
+      require('../../assets/gifs/plate-front-raise-2.webp'),
+    ],
+    imageCredit: {
+      source: 'App Gym',
+      author: 'ilustración propia',
+      license: 'CC BY-SA 4.0',
+      licenseUrl: 'https://creativecommons.org/licenses/by-sa/4.0/',
+    },
+    textCredit: {
+      source: 'App Gym',
+      author: 'texto propio',
+      license: 'CC BY-SA 4.0',
+      licenseUrl: 'https://creativecommons.org/licenses/by-sa/4.0/',
+    },
+  },
   'barbell-shrug': {
     animation: require('../../assets/gifs/barbell-shrug.gif'),
     frames: [
@@ -922,6 +979,25 @@ export const EXERCISE_MEDIA: Record<string, ExerciseMedia> = {
     textCredit: {
       source: 'Everkinetic',
       author: 'adaptado y traducido por App Gym',
+      license: 'CC BY-SA 4.0',
+      licenseUrl: 'https://creativecommons.org/licenses/by-sa/4.0/',
+    },
+  },
+  'cable-overhead-triceps-extension': {
+    animation: require('../../assets/gifs/cable-overhead-triceps-extension.gif'),
+    frames: [
+      require('../../assets/gifs/cable-overhead-triceps-extension-1.webp'),
+      require('../../assets/gifs/cable-overhead-triceps-extension-2.webp'),
+    ],
+    imageCredit: {
+      source: 'App Gym',
+      author: 'ilustración propia',
+      license: 'CC BY-SA 4.0',
+      licenseUrl: 'https://creativecommons.org/licenses/by-sa/4.0/',
+    },
+    textCredit: {
+      source: 'App Gym',
+      author: 'texto propio',
       license: 'CC BY-SA 4.0',
       licenseUrl: 'https://creativecommons.org/licenses/by-sa/4.0/',
     },

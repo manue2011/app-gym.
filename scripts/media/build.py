@@ -125,7 +125,9 @@ Solo se aceptan animaciones propias, encargadas o con licencia que permita uso c
   [github.com/everkinetic/data](https://github.com/everkinetic/data) bajo
   [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/).
 - **Ilustraciones propias de App Gym** — para los ejercicios sin imagen libre
-  (face pull, hip thrust, elevación de piernas colgado). Se publican también bajo CC BY-SA 4.0.
+  (face pull, hip thrust, elevación de piernas colgado, aperturas inversas en máquina,
+  elevación frontal con disco y extensión de tríceps sobre la cabeza en polea). Se publican
+  también bajo CC BY-SA 4.0.
 
 ## Obras derivadas
 

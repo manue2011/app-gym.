@@ -1,5 +1,6 @@
 /** @jest-environment node */
 import catalog from '../../data/exercises.json';
+import { EXERCISE_MEDIA } from '../../data/exerciseMedia';
 import { ROUTINE_TEMPLATES } from '../../data/templates';
 import { initDatabase } from '../migrate';
 import { createCustomExercise, listExercises } from '../repositories/exercises';
@@ -263,7 +264,7 @@ describe('validateTargets', () => {
 });
 
 describe('routine templates', () => {
-  it('creates every template with its days, catalog exercises and custom ones only once', async () => {
+  it('creates every template with its days and catalog exercises', async () => {
     const db = await createTestDb();
     for (const template of ROUTINE_TEMPLATES) {
       const id = await createRoutineFromTemplate(db, template);
@@ -273,26 +274,68 @@ describe('routine templates', () => {
         template.days.map((d) => [d.name, d.weekday, d.exercises.length]),
       );
     }
-    const customCount = async () => (await listExercises(db)).filter((e) => e.is_custom).length;
-    const before = await customCount();
-    expect(before).toBeGreaterThan(0);
-    await createRoutineFromTemplate(db, ROUTINE_TEMPLATES[0]);
-    expect(await customCount()).toBe(before);
+  });
+
+  it('every template exercise has an image', () => {
+    for (const t of ROUTINE_TEMPLATES)
+      for (const d of t.days)
+        for (const e of d.exercises) expect(EXERCISE_MEDIA[e.slug]).toBeDefined();
   });
 
   it('builds my 4-day routine as described', async () => {
     const db = await createTestDb();
     const routine = await getRoutine(db, await createRoutineFromTemplate(db, ROUTINE_TEMPLATES[0]));
     const monday = routine!.days.find((d) => d.weekday === 1)!;
-    expect(monday.exercises.map((e) => [e.exercise_name, e.target_sets, e.rep_max])).toEqual([
-      ['Jalón al pecho', 4, 12],
-      ['Jalón al pecho agarre supino cerrado', 3, 12],
-      ['Remo sentado en polea', 4, 12],
-      ['Aperturas inversas en máquina (deltoides posterior)', 4, 12],
-      ['Face pull', 4, 12],
-      ['Curl con mancuernas', 4, 12],
-      ['Curl martillo', 4, 12],
-      ['Curl en banco Scott con barra', 4, 12],
+    expect(monday.exercises.map((e) => [e.exercise_slug, e.target_sets, e.rep_max])).toEqual([
+      ['lat-pulldown', 4, 12],
+      ['underhand-pulldown', 3, 12],
+      ['seated-cable-row', 4, 12],
+      ['machine-rear-delt-fly', 4, 12],
+      ['face-pull', 4, 12],
+      ['dumbbell-curl', 4, 12],
+      ['hammer-curl', 4, 12],
+      ['preacher-curl', 4, 12],
     ]);
+  });
+});
+
+describe('migration 002', () => {
+  it('adopts the old template custom exercises and moves the overhead extension to the cable one', async () => {
+    const db = await createTestDb();
+    const newSlugs = [
+      'underhand-pulldown',
+      'machine-rear-delt-fly',
+      'plate-front-raise',
+      'cable-overhead-triceps-extension',
+    ];
+    await db.execAsync(`DELETE FROM exercises WHERE slug IN ('${newSlugs.join("','")}')`);
+    const pulldownId = await createCustomExercise(db, {
+      name: 'Jalón al pecho agarre supino cerrado',
+      muscle_primary: 'back',
+    });
+    const routineId = await createRoutine(db, 'Mi rutina (4 días)');
+    const dayId = await addDay(db, routineId, { name: 'Lunes' });
+    const all = await listExercises(db);
+    const overheadId = all.find((e) => e.slug === 'overhead-triceps-extension')!.id;
+    await addExerciseToDay(db, dayId, pulldownId);
+    await addExerciseToDay(db, dayId, overheadId, {
+      notes:
+        'En polea con cuerda: polea a la altura de la cintura, de espaldas a ella, tirando hacia arriba por encima de la cabeza y abriendo la cuerda.',
+    });
+    await addExerciseToDay(db, dayId, overheadId, { notes: 'Con mancuerna' });
+
+    await db.execAsync('PRAGMA user_version = 1');
+    await initDatabase(db);
+
+    const pulldown = (await listExercises(db)).find((e) => e.id === pulldownId)!;
+    expect([pulldown.slug, pulldown.is_custom]).toEqual(['underhand-pulldown', false]);
+    const day = (await getRoutine(db, routineId))!.days[0];
+    expect(day.exercises.map((e) => [e.exercise_slug, e.notes])).toEqual([
+      ['underhand-pulldown', null],
+      ['cable-overhead-triceps-extension', null],
+      ['overhead-triceps-extension', 'Con mancuerna'],
+    ]);
+    const slugs = (await listExercises(db)).map((e) => e.slug);
+    for (const s of newSlugs) expect(slugs.filter((x) => x === s)).toHaveLength(1);
   });
 });

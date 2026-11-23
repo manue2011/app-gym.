@@ -8,7 +8,9 @@ Solo se aceptan animaciones propias, encargadas o con licencia que permita uso c
   [github.com/everkinetic/data](https://github.com/everkinetic/data) bajo
   [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/).
 - **Ilustraciones propias de App Gym** — para los ejercicios sin imagen libre
-  (face pull, hip thrust, elevación de piernas colgado). Se publican también bajo CC BY-SA 4.0.
+  (face pull, hip thrust, elevación de piernas colgado, aperturas inversas en máquina,
+  elevación frontal con disco y extensión de tríceps sobre la cabeza en polea). Se publican
+  también bajo CC BY-SA 4.0.
 
 ## Obras derivadas
 
@@ -39,6 +41,7 @@ propia son texto propio.
 | `pull-up` | [Pull Ups](https://github.com/everkinetic/data/blob/master/dist/md/pull-ups.md) (id 0087) | Everkinetic — Greg Priday | CC BY-SA 4.0 | Adaptado y traducido de Everkinetic |
 | `chin-up` | [Chin Ups](https://github.com/everkinetic/data/blob/master/dist/md/chin-ups.md) (id 0089) | Everkinetic — Greg Priday | CC BY-SA 4.0 | Adaptado y traducido de Everkinetic |
 | `lat-pulldown` | [Wide Grip Lat Pull Down](https://github.com/everkinetic/data/blob/master/dist/md/wide-grip-lat-pull-down.md) (id 0097) | Everkinetic — Greg Priday | CC BY-SA 4.0 | Adaptado y traducido de Everkinetic |
+| `underhand-pulldown` | [Underhand Pull downs](https://github.com/everkinetic/data/blob/master/dist/md/underhand-pull-downs.md) (id 0093) | Everkinetic — Greg Priday | CC BY-SA 4.0 | Adaptado y traducido de Everkinetic |
 | `v-bar-pulldown` | [V Bar Pull Down](https://github.com/everkinetic/data/blob/master/dist/md/v-bar-pull-down.md) (id 0096) | Everkinetic — Greg Priday | CC BY-SA 4.0 | Adaptado y traducido de Everkinetic |
 | `straight-arm-pulldown` | [Straight Arm Push Down](https://github.com/everkinetic/data/blob/master/dist/md/straight-arm-push-down.md) (id 0092) | Everkinetic — Greg Priday | CC BY-SA 4.0 | Adaptado y traducido de Everkinetic |
 | `barbell-row` | [Rear Deltoid Row Barbell](https://github.com/everkinetic/data/blob/master/dist/md/rear-deltoid-row-barbell.md) (id 0028) | Everkinetic — Greg Priday | CC BY-SA 4.0 | Adaptado y traducido de Everkinetic |
@@ -58,6 +61,8 @@ propia son texto propio.
 | `rear-delt-fly` | [Bent Over Rear Deltoid Raise With Head On Bench](https://github.com/everkinetic/data/blob/master/dist/md/bent-over-rear-deltoid-raise-with-head-on-bench.md) (id 0032) | Everkinetic — Greg Priday | CC BY-SA 4.0 | Adaptado y traducido de Everkinetic |
 | `upright-row` | [Upright Barbell Rows](https://github.com/everkinetic/data/blob/master/dist/md/upright-barbell-rows.md) (id 0014) | Everkinetic — Greg Priday | CC BY-SA 4.0 | Adaptado y traducido de Everkinetic |
 | `face-pull` | Ilustración propia de App Gym | App Gym | CC BY-SA 4.0 | Propio |
+| `machine-rear-delt-fly` | Ilustración propia de App Gym | App Gym | CC BY-SA 4.0 | Propio |
+| `plate-front-raise` | Ilustración propia de App Gym | App Gym | CC BY-SA 4.0 | Propio |
 | `barbell-shrug` | [Barbell Shrugs](https://github.com/everkinetic/data/blob/master/dist/md/barbell-shrugs.md) (id 0030) | Everkinetic — Greg Priday | CC BY-SA 4.0 | Adaptado y traducido de Everkinetic |
 | `dumbbell-shrug` | [Shoulder Shrugs](https://github.com/everkinetic/data/blob/master/dist/md/shoulder-shrugs.md) (id 0005) | Everkinetic — Greg Priday | CC BY-SA 4.0 | Adaptado y traducido de Everkinetic |
 | `barbell-curl` | [Biceps Curls with Barbell](https://github.com/everkinetic/data/blob/master/dist/md/biceps-curls-with-barbell.md) (id 0211) | Everkinetic — Greg Priday | CC BY-SA 4.0 | Adaptado y traducido de Everkinetic |
@@ -71,6 +76,7 @@ propia son texto propio.
 | `triceps-pushdown` | [Triceps Pushdown with Cable](https://github.com/everkinetic/data/blob/master/dist/md/triceps-pushdown-with-cable.md) (id 0205) | Everkinetic — Greg Priday | CC BY-SA 4.0 | Adaptado y traducido de Everkinetic |
 | `rope-pushdown` | [Triceps Pushdown with Rope and Cable](https://github.com/everkinetic/data/blob/master/dist/md/triceps-pushdown-with-rope-and-cable.md) (id 0206) | Everkinetic — Greg Priday | CC BY-SA 4.0 | Adaptado y traducido de Everkinetic |
 | `overhead-triceps-extension` | [Standing Triceps Extension](https://github.com/everkinetic/data/blob/master/dist/md/standing-triceps-extension-2.md) (id 0198) | Everkinetic — Greg Priday | CC BY-SA 4.0 | Adaptado y traducido de Everkinetic |
+| `cable-overhead-triceps-extension` | Ilustración propia de App Gym | App Gym | CC BY-SA 4.0 | Propio |
 | `skull-crusher` | [Lying Close Grip Triceps Press to Chin with Barbell](https://github.com/everkinetic/data/blob/master/dist/md/lying-close-grip-triceps-press-to-chin-with-barbell.md) (id 0180) | Everkinetic — Greg Priday | CC BY-SA 4.0 | Adaptado y traducido de Everkinetic |
 | `close-grip-bench-press` | [Close Grip Barbell Bench Press](https://github.com/everkinetic/data/blob/master/dist/md/close-grip-barbell-bench-press.md) (id 0049) | Everkinetic — Greg Priday | CC BY-SA 4.0 | Adaptado y traducido de Everkinetic |
 | `triceps-kickback` | [Triceps Kickback with Dumbbell](https://github.com/everkinetic/data/blob/master/dist/md/triceps-kickback-with-dumbbell.md) (id 0204) | Everkinetic — Greg Priday | CC BY-SA 4.0 | Adaptado y traducido de Everkinetic |
