@@ -1,7 +1,9 @@
 import { create } from 'zustand';
 
+import type { RoutineTemplate } from '../data/templates';
 import {
   createRoutine,
+  createRoutineFromTemplate,
   deleteRoutine,
   duplicateRoutine,
   listRoutines,
@@ -17,6 +19,7 @@ interface RoutinesState {
   lastDeleted: { id: number; name: string; wasActive: boolean } | null;
   refresh: (db: Db) => Promise<void>;
   create: (db: Db, name: string) => Promise<number>;
+  createFromTemplate: (db: Db, template: RoutineTemplate) => Promise<number>;
   duplicate: (db: Db, id: number) => Promise<number>;
   setActive: (db: Db, id: number) => Promise<void>;
   remove: (db: Db, id: number, name: string) => Promise<void>;
@@ -30,6 +33,11 @@ export const useRoutinesStore = create<RoutinesState>((set, get) => ({
   refresh: async (db) => set({ routines: await listRoutines(db) }),
   create: async (db, name) => {
     const id = await createRoutine(db, name);
+    await get().refresh(db);
+    return id;
+  },
+  createFromTemplate: async (db, template) => {
+    const id = await createRoutineFromTemplate(db, template);
     await get().refresh(db);
     return id;
   },

@@ -1,4 +1,6 @@
+import type { RoutineTemplate, TemplateExerciseRef } from '../../data/templates';
 import { nowIso, type Db } from '../types';
+import { createCustomExercise } from './exercises';
 
 export interface Routine {
   id: number;
@@ -434,4 +436,60 @@ export async function getRoutineDay(
     [dayId],
   );
   return { ...day, exercises };
+}
+
+// ---------- Templates ----------
+
+/** Catalog exercise by slug, or the custom exercise with that name (created if missing). */
+async function resolveTemplateExercise(db: Db, ref: TemplateExerciseRef): Promise<number> {
+  if ('slug' in ref) {
+    const row = await db.getFirstAsync<{ id: number }>('SELECT id FROM exercises WHERE slug = ?', [
+      ref.slug,
+    ]);
+    if (!row) throw new Error(`Exercise ${ref.slug} not found`);
+    return row.id;
+  }
+  const existing = await db.getFirstAsync<{ id: number }>(
+    'SELECT id FROM exercises WHERE is_custom = 1 AND name = ? ORDER BY id LIMIT 1',
+    [ref.custom.name],
+  );
+  return existing?.id ?? createCustomExercise(db, ref.custom);
+}
+
+/** Creates a new (inactive) routine with the template's days and exercises. */
+export async function createRoutineFromTemplate(
+  db: Db,
+  template: RoutineTemplate,
+): Promise<number> {
+  let routineId = 0;
+  await db.withTransactionAsync(async () => {
+    routineId = await createRoutine(db, template.name);
+    for (const [dayPosition, day] of template.days.entries()) {
+      const dayRes = await db.runAsync(
+        'INSERT INTO routine_days (routine_id, name, weekday, position) VALUES (?, ?, ?, ?)',
+        [routineId, day.name, day.weekday, dayPosition],
+      );
+      for (const [position, e] of day.exercises.entries()) {
+        const t = { ...DEFAULT_TARGETS, ...e, notes: e.notes ?? null };
+        const error = validateTargets(t);
+        if (error) throw new Error(error);
+        await db.runAsync(
+          `INSERT INTO routine_exercises
+             (routine_day_id, exercise_id, position, target_sets, rep_min, rep_max, rest_seconds, notes)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+          [
+            dayRes.lastInsertRowId,
+            await resolveTemplateExercise(db, e.exercise),
+            position,
+            t.target_sets,
+            t.rep_min,
+            t.rep_max,
+            t.rest_seconds,
+            t.notes,
+          ],
+        );
+      }
+    }
+  });
+  return routineId;
 }

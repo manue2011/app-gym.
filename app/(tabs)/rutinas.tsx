@@ -5,6 +5,7 @@ import { useCallback } from 'react';
 import { Alert, FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Button, Card, IconButton, Muted } from '../../src/components/ui';
+import { ROUTINE_TEMPLATES } from '../../src/data/templates';
 import type { Routine } from '../../src/db/repositories/routines';
 import { useRoutinesStore } from '../../src/store/routines';
 import { useColors } from '../../src/theme';
@@ -15,8 +16,17 @@ const openRoutine = (id: number) =>
 export default function RoutinesScreen() {
   const db = useSQLiteContext();
   const c = useColors();
-  const { routines, lastDeleted, refresh, create, duplicate, remove, undoRemove, dismissUndo } =
-    useRoutinesStore();
+  const {
+    routines,
+    lastDeleted,
+    refresh,
+    create,
+    createFromTemplate,
+    duplicate,
+    remove,
+    undoRemove,
+    dismissUndo,
+  } = useRoutinesStore();
 
   useFocusEffect(
     useCallback(() => {
@@ -93,7 +103,21 @@ export default function RoutinesScreen() {
             </Card>
           </Pressable>
         )}
-        ListFooterComponent={<Button label="Nueva rutina" icon="add" onPress={onCreate} />}
+        ListFooterComponent={
+          <View style={{ gap: 12 }}>
+            <Button label="Nueva rutina" icon="add" onPress={onCreate} />
+            <Muted>O empieza desde una plantilla y edítala a tu gusto:</Muted>
+            {ROUTINE_TEMPLATES.map((t) => (
+              <Button
+                key={t.id}
+                label={t.name}
+                icon="document-text-outline"
+                variant="secondary"
+                onPress={async () => openRoutine(await createFromTemplate(db, t))}
+              />
+            ))}
+          </View>
+        }
       />
     </View>
   );

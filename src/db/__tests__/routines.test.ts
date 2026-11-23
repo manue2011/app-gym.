@@ -1,11 +1,13 @@
 /** @jest-environment node */
 import catalog from '../../data/exercises.json';
+import { ROUTINE_TEMPLATES } from '../../data/templates';
 import { initDatabase } from '../migrate';
 import { createCustomExercise, listExercises } from '../repositories/exercises';
 import {
   addDay,
   addExerciseToDay,
   createRoutine,
+  createRoutineFromTemplate,
   dayForWeekday,
   deleteRoutine,
   duplicateRoutine,
@@ -257,5 +259,40 @@ describe('validateTargets', () => {
     expect(validateTargets({ ...DEFAULT_TARGETS, rest_seconds: -1 })).toBe(
       'El descanso no puede ser negativo.',
     );
+  });
+});
+
+describe('routine templates', () => {
+  it('creates every template with its days, catalog exercises and custom ones only once', async () => {
+    const db = await createTestDb();
+    for (const template of ROUTINE_TEMPLATES) {
+      const id = await createRoutineFromTemplate(db, template);
+      const routine = await getRoutine(db, id);
+      expect(routine?.name).toBe(template.name);
+      expect(routine?.days.map((d) => [d.name, d.weekday, d.exercises.length])).toEqual(
+        template.days.map((d) => [d.name, d.weekday, d.exercises.length]),
+      );
+    }
+    const customCount = async () => (await listExercises(db)).filter((e) => e.is_custom).length;
+    const before = await customCount();
+    expect(before).toBeGreaterThan(0);
+    await createRoutineFromTemplate(db, ROUTINE_TEMPLATES[0]);
+    expect(await customCount()).toBe(before);
+  });
+
+  it('builds my 4-day routine as described', async () => {
+    const db = await createTestDb();
+    const routine = await getRoutine(db, await createRoutineFromTemplate(db, ROUTINE_TEMPLATES[0]));
+    const monday = routine!.days.find((d) => d.weekday === 1)!;
+    expect(monday.exercises.map((e) => [e.exercise_name, e.target_sets, e.rep_max])).toEqual([
+      ['Jalón al pecho', 4, 12],
+      ['Jalón al pecho agarre supino cerrado', 3, 12],
+      ['Remo sentado en polea', 4, 12],
+      ['Aperturas inversas en máquina (deltoides posterior)', 4, 12],
+      ['Face pull', 4, 12],
+      ['Curl con mancuernas', 4, 12],
+      ['Curl martillo', 4, 12],
+      ['Curl en banco Scott con barra', 4, 12],
+    ]);
   });
 });
