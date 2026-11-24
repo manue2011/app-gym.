@@ -1,8 +1,9 @@
 import { router, Stack, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
-import { useCallback, useState } from 'react';
+import { useCallback, useState, type ReactElement } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
+import { DraggableList } from '../../src/components/DraggableList';
 import { ExerciseThumb } from '../../src/components/ExerciseThumb';
 import { WhyLink } from '../../src/components/WhyLink';
 import {
@@ -18,6 +19,7 @@ import {
 import { muscleLabel, WEEKDAY_ORDER, WEEKDAYS, WEEKDAYS_SHORT } from '../../src/data/muscles';
 import {
   addDay,
+  dayForWeekday,
   getRoutine,
   removeDay,
   removeRoutineExercise,
@@ -40,6 +42,9 @@ import { MIN_WEEKLY_SETS, type RuleId } from '../../src/science/rules';
 import { useRoutinesStore } from '../../src/store/routines';
 import { useColors } from '../../src/theme';
 
+/** Matches the Card gap, so dragged items move exactly one slot. */
+const CARD_GAP = 10;
+
 /** Returns a copy of `ids` with the item at `index` moved by `delta` (-1 up, +1 down). */
 function move(ids: number[], index: number, delta: -1 | 1): number[] {
   const next = [...ids];
@@ -53,6 +58,9 @@ export default function RoutineEditorScreen() {
   const c = useColors();
   const routineId = Number(useLocalSearchParams<{ id: string }>().id);
   const [routine, setRoutine] = useState<RoutineDetail | null | undefined>(undefined);
+  const [dragging, setDragging] = useState(false);
+  /** Day shown in the editor; null = today's day (or the first one). */
+  const [shownDay, setShownDay] = useState<number | 'all' | null>(null);
   const { setActive, duplicate, remove } = useRoutinesStore();
 
   const reload = useCallback(async () => {
@@ -85,6 +93,14 @@ export default function RoutineEditorScreen() {
   }
 
   const dayIds = routine.days.map((d) => d.id);
+  const selected =
+    shownDay === 'all'
+      ? 'all'
+      : (routine.days.find((d) => d.id === shownDay) ??
+        dayForWeekday(routine, new Date().getDay()) ??
+        routine.days[0]);
+  const visibleDays =
+    selected === 'all' ? routine.days : routine.days.filter((d) => d.id === selected?.id);
 
   const confirmRemoveDay = (dayId: number, name: string) =>
     Alert.alert('Quitar día', `¿Quitar "${name}" de la rutina?`, [
@@ -115,7 +131,10 @@ export default function RoutineEditorScreen() {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+    <ScrollView
+      contentContainerStyle={styles.content}
+      keyboardShouldPersistTaps="handled"
+      scrollEnabled={!dragging}>
       <Stack.Screen options={{ title: routine.name }} />
 
       <Card>
@@ -141,90 +160,118 @@ export default function RoutineEditorScreen() {
 
       <WeeklySummary routine={routine} />
 
-      {routine.days.map((day, dayIndex) => (
-        <Card key={day.id}>
-          <View style={styles.row}>
-            <CommitTextInput
-              value={day.name}
-              onCommit={(name) => save(() => updateDay(db, day.id, { name }))}
-              placeholder="Ej. Pecho y tríceps"
-              returnKeyType="done"
-              style={styles.dayName}
-            />
-            <IconButton
-              icon="arrow-up"
-              label="Subir día"
-              disabled={dayIndex === 0}
-              onPress={() => save(() => reorderDays(db, routine.id, move(dayIds, dayIndex, -1)))}
-            />
-            <IconButton
-              icon="arrow-down"
-              label="Bajar día"
-              disabled={dayIndex === dayIds.length - 1}
-              onPress={() => save(() => reorderDays(db, routine.id, move(dayIds, dayIndex, 1)))}
-            />
-            <IconButton
-              icon="trash-outline"
-              label="Quitar día"
-              color={c.danger}
-              onPress={() => confirmRemoveDay(day.id, day.name)}
-            />
-          </View>
-
-          <View style={styles.chips}>
-            {WEEKDAY_ORDER.map((wd) => (
-              <Chip
-                key={wd}
-                label={WEEKDAYS_SHORT[wd]}
-                selected={day.weekday === wd}
-                onPress={() =>
-                  save(() => updateDay(db, day.id, { weekday: day.weekday === wd ? null : wd }))
-                }
-              />
-            ))}
-          </View>
-          <Muted>{day.weekday === null ? 'Sin día fijo' : WEEKDAYS[day.weekday]}</Muted>
-
-          {day.exercises.map((ex, exIndex) => (
-            <ExerciseEditor
-              key={ex.id}
-              exercise={ex}
-              isFirst={exIndex === 0}
-              isLast={exIndex === day.exercises.length - 1}
-              onChange={(patch) => save(() => updateRoutineExercise(db, ex.id, patch))}
-              onMove={(delta) =>
-                save(() =>
-                  reorderExercises(
-                    db,
-                    day.id,
-                    move(
-                      day.exercises.map((e) => e.id),
-                      exIndex,
-                      delta,
-                    ),
-                  ),
-                )
-              }
-              onRemove={() => save(() => removeRoutineExercise(db, ex.id))}
+      {routine.days.length > 1 && (
+        <View style={styles.chips}>
+          {routine.days.map((d) => (
+            <Chip
+              key={d.id}
+              label={d.weekday === null ? d.name : `${WEEKDAYS[d.weekday]} · ${d.name}`}
+              selected={selected !== 'all' && selected?.id === d.id}
+              onPress={() => setShownDay(d.id)}
             />
           ))}
-
-          <Button
-            label="Añadir ejercicio"
-            icon="add"
-            variant="secondary"
-            onPress={() =>
-              router.push({ pathname: '/elegir-ejercicio', params: { dayId: String(day.id) } })
-            }
+          <Chip
+            label="Toda la semana"
+            selected={selected === 'all'}
+            onPress={() => setShownDay('all')}
           />
-        </Card>
-      ))}
+        </View>
+      )}
+
+      {visibleDays.map((day) => {
+        const dayIndex = dayIds.indexOf(day.id);
+        return (
+          <Card key={day.id}>
+            <View style={styles.row}>
+              <CommitTextInput
+                value={day.name}
+                onCommit={(name) => save(() => updateDay(db, day.id, { name }))}
+                placeholder="Ej. Pecho y tríceps"
+                returnKeyType="done"
+                style={styles.dayName}
+              />
+              <IconButton
+                icon="arrow-up"
+                label="Subir día"
+                disabled={dayIndex === 0}
+                onPress={() => save(() => reorderDays(db, routine.id, move(dayIds, dayIndex, -1)))}
+              />
+              <IconButton
+                icon="arrow-down"
+                label="Bajar día"
+                disabled={dayIndex === dayIds.length - 1}
+                onPress={() => save(() => reorderDays(db, routine.id, move(dayIds, dayIndex, 1)))}
+              />
+              <IconButton
+                icon="trash-outline"
+                label="Quitar día"
+                color={c.danger}
+                onPress={() => confirmRemoveDay(day.id, day.name)}
+              />
+            </View>
+
+            <Muted>
+              Día de la semana: {day.weekday === null ? 'sin día fijo' : WEEKDAYS[day.weekday]}
+            </Muted>
+            <View style={styles.chips}>
+              {WEEKDAY_ORDER.map((wd) => (
+                <Chip
+                  key={wd}
+                  label={WEEKDAYS_SHORT[wd]}
+                  selected={day.weekday === wd}
+                  onPress={() =>
+                    save(() => updateDay(db, day.id, { weekday: day.weekday === wd ? null : wd }))
+                  }
+                />
+              ))}
+            </View>
+
+            <DraggableList
+              items={day.exercises}
+              keyOf={(ex) => ex.id}
+              gap={CARD_GAP}
+              onDragChange={setDragging}
+              onReorder={(ids) => {
+                // Show the new order at once; SQLite is the source of truth after the reload.
+                setRoutine({
+                  ...routine,
+                  days: routine.days.map((d) =>
+                    d.id === day.id
+                      ? { ...d, exercises: ids.map((id) => d.exercises.find((e) => e.id === id)!) }
+                      : d,
+                  ),
+                });
+                save(() => reorderExercises(db, day.id, ids));
+              }}
+              renderItem={(ex, handle) => (
+                <ExerciseEditor
+                  exercise={ex}
+                  handle={handle}
+                  onChange={(patch) => save(() => updateRoutineExercise(db, ex.id, patch))}
+                  onRemove={() => save(() => removeRoutineExercise(db, ex.id))}
+                />
+              )}
+            />
+
+            <Button
+              label="Añadir ejercicio"
+              icon="add"
+              variant="secondary"
+              onPress={() =>
+                router.push({ pathname: '/elegir-ejercicio', params: { dayId: String(day.id) } })
+              }
+            />
+          </Card>
+        );
+      })}
 
       <Button
         label="Añadir día"
         icon="add"
         onPress={() =>
-          save(() => addDay(db, routine.id, { name: `Día ${routine.days.length + 1}` }))
+          save(async () =>
+            setShownDay(await addDay(db, routine.id, { name: `Día ${routine.days.length + 1}` })),
+          )
         }
       />
 
@@ -300,17 +347,13 @@ function WeeklySummary({ routine }: { routine: RoutineDetail }) {
 
 function ExerciseEditor({
   exercise: ex,
-  isFirst,
-  isLast,
+  handle,
   onChange,
-  onMove,
   onRemove,
 }: {
   exercise: RoutineExercise;
-  isFirst: boolean;
-  isLast: boolean;
+  handle: ReactElement;
   onChange: (patch: Partial<ExerciseTargets>) => void;
-  onMove: (delta: -1 | 1) => void;
   onRemove: () => void;
 }) {
   const c = useColors();
@@ -327,8 +370,7 @@ function ExerciseEditor({
           <Text style={{ color: c.text, fontWeight: '600', fontSize: 15 }}>{ex.exercise_name}</Text>
           <Muted>{muscleLabel(ex.muscle_primary)}</Muted>
         </View>
-        <IconButton icon="arrow-up" label="Subir" disabled={isFirst} onPress={() => onMove(-1)} />
-        <IconButton icon="arrow-down" label="Bajar" disabled={isLast} onPress={() => onMove(1)} />
+        {handle}
         <IconButton icon="close" label="Quitar ejercicio" color={c.danger} onPress={onRemove} />
       </View>
       <View style={styles.row}>

@@ -29,6 +29,7 @@ import {
   DEFAULT_TARGETS,
 } from '../repositories/routines';
 import type { Db } from '../types';
+import { getWorkoutSets, logSet, startWorkout } from '../repositories/workouts';
 import { createTestDb } from '../__testutils__/testDb';
 
 let db: Db & { raw: import('node:sqlite').DatabaseSync };
@@ -290,12 +291,27 @@ describe('routine templates', () => {
       ['lat-pulldown', 4, 12],
       ['underhand-pulldown', 3, 12],
       ['seated-cable-row', 4, 12],
+      ['wide-grip-seated-cable-row', 4, 12],
       ['machine-rear-delt-fly', 4, 12],
       ['face-pull', 4, 12],
       ['dumbbell-curl', 4, 12],
       ['hammer-curl', 4, 12],
       ['preacher-curl', 4, 12],
     ]);
+    const slugsOn = (weekday: number) =>
+      routine!.days.find((d) => d.weekday === weekday)!.exercises.map((e) => e.exercise_slug);
+    expect(slugsOn(2)).toEqual([
+      'pec-deck',
+      'machine-chest-press',
+      'bench-press',
+      'wide-grip-machine-dip',
+      'machine-shoulder-press',
+      'plate-front-raise',
+      'rope-pushdown',
+      'cable-overhead-triceps-extension',
+      'close-grip-machine-dip',
+    ]);
+    expect(slugsOn(4)).toContain('close-grip-machine-dip');
   });
 });
 
@@ -337,5 +353,90 @@ describe('migration 002', () => {
     ]);
     const slugs = (await listExercises(db)).map((e) => e.slug);
     for (const s of newSlugs) expect(slugs.filter((x) => x === s)).toHaveLength(1);
+  });
+});
+
+describe('migration 003', () => {
+  it('adds the wide row and machine dips to my routine, puts back day on Monday and keeps history', async () => {
+    const db = await createTestDb();
+    const newSlugs = [
+      'wide-grip-seated-cable-row',
+      'wide-grip-machine-dip',
+      'close-grip-machine-dip',
+    ];
+    await db.execAsync(`DELETE FROM exercises WHERE slug IN ('${newSlugs.join("','")}')`);
+    const idOf = async (slug: string) => (await listExercises(db)).find((e) => e.slug === slug)!.id;
+
+    // As it was on the phone: back day moved to Tuesday by mistake, dips added by hand.
+    const routineId = await createRoutine(db, 'Mi rutina (4 días)');
+    const back = await addDay(db, routineId, {
+      name: 'Espalda, hombro posterior y bíceps',
+      weekday: 2,
+    });
+    const chest = await addDay(db, routineId, {
+      name: 'Pecho, hombro anterior y tríceps',
+      weekday: 2,
+    });
+    const arms = await addDay(db, routineId, { name: 'Brazo completo y abdomen', weekday: 4 });
+    for (const slug of ['lat-pulldown', 'seated-cable-row', 'face-pull'])
+      await addExerciseToDay(db, back, await idOf(slug));
+    for (const slug of ['bench-press', 'dips', 'rope-pushdown', 'cable-overhead-triceps-extension'])
+      await addExerciseToDay(db, chest, await idOf(slug), { rep_min: 8 });
+    for (const slug of ['rope-pushdown', 'cable-overhead-triceps-extension', 'plate-front-raise'])
+      await addExerciseToDay(db, arms, await idOf(slug));
+    const dipsId = await idOf('dips');
+    const workoutId = await startWorkout(db, chest);
+    await logSet(db, {
+      workout_id: workoutId,
+      exercise_id: dipsId,
+      set_number: 1,
+      weight_kg: 0,
+      reps: 10,
+      rir: 2,
+    });
+    const other = await createRoutine(db, 'Otra');
+    const otherDay = await addDay(db, other, {
+      name: 'Pecho, hombro anterior y tríceps',
+      weekday: 2,
+    });
+    await addExerciseToDay(db, otherDay, dipsId);
+
+    await db.execAsync('PRAGMA user_version = 2');
+    await initDatabase(db);
+    await initDatabase(db);
+
+    const days = (await getRoutine(db, routineId))!.days;
+    expect(days.map((d) => d.weekday)).toEqual([1, 2, 4]);
+    const slugs = days.map((d) => d.exercises.map((e) => e.exercise_slug));
+    expect(slugs).toEqual([
+      ['lat-pulldown', 'seated-cable-row', 'wide-grip-seated-cable-row', 'face-pull'],
+      [
+        'bench-press',
+        'wide-grip-machine-dip',
+        'rope-pushdown',
+        'cable-overhead-triceps-extension',
+        'close-grip-machine-dip',
+      ],
+      [
+        'rope-pushdown',
+        'cable-overhead-triceps-extension',
+        'close-grip-machine-dip',
+        'plate-front-raise',
+      ],
+    ]);
+    for (const d of days)
+      expect(d.exercises.map((e) => e.position)).toEqual(d.exercises.map((_, i) => i));
+    const wideDip = days[1].exercises[1];
+    expect([wideDip.target_sets, wideDip.rep_min, wideDip.rep_max, wideDip.rest_seconds]).toEqual([
+      4, 12, 12, 120,
+    ]);
+
+    const dipRow = (await listExercises(db)).find((e) => e.slug === 'close-grip-machine-dip')!;
+    expect(dipRow.name).toBe('Fondos en máquina agarre cerrado (tríceps)');
+    expect(EXERCISE_MEDIA[dipRow.slug!]).toBeDefined();
+    expect((await getWorkoutSets(db, workoutId)).map((s) => s.exercise_id)).toEqual([dipsId]);
+    expect((await getRoutine(db, other))!.days[0].exercises.map((e) => e.exercise_slug)).toEqual([
+      'dips',
+    ]);
   });
 });

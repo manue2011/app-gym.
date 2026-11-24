@@ -2,6 +2,7 @@ import * as Haptics from 'expo-haptics';
 import { useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { scheduleRestEnd } from '../notifications';
 import { useColors } from '../theme';
 
 const format = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
@@ -22,6 +23,12 @@ export function RestTimer({
     if (endAt === null) return;
     const tick = setInterval(() => setNow(Date.now()), 250);
     return () => clearInterval(tick);
+  }, [endAt]);
+
+  // Also notify when the phone is locked; moving or skipping the rest replaces the notification.
+  useEffect(() => {
+    if (endAt === null || endAt <= Date.now()) return;
+    return scheduleRestEnd(endAt);
   }, [endAt]);
 
   const remaining = endAt === null ? 0 : Math.max(0, Math.ceil((endAt - now) / 1000));

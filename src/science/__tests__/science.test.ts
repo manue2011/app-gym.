@@ -1,3 +1,4 @@
+import { fromKg, KG_PER_LB } from '../../units';
 import { suggestOverload } from '../overload';
 import {
   repRangeWarnings,
@@ -94,6 +95,14 @@ describe('suggestOverload', () => {
     expect(suggestOverload(sets([60, 12], [60, 11], [60, 12]), bench)).toBeNull();
     expect(suggestOverload(sets([60, 12], [60, 12]), bench)).toBeNull();
     expect(suggestOverload(sets([0, 15], [0, 15], [0, 15]), bench)).toBeNull();
+  });
+
+  it('suggests round pound increments when the unit is lb', () => {
+    const lb135 = 135 * KG_PER_LB;
+    const s = suggestOverload(sets([lb135, 12], [lb135, 12], [lb135, 12]), bench, 'lb')!;
+    expect(fromKg(s.toKg, 'lb')).toBe(140);
+    const legs = { target_sets: 1, rep_max: 10, muscle_primary: 'quads' };
+    expect(fromKg(suggestOverload(sets([lb135, 10]), legs, 'lb')!.toKg, 'lb')).toBe(145);
   });
 
   it('ignores extra sets beyond the target', () => {

@@ -90,7 +90,8 @@ export const RULES: Record<RuleId, Rule> = {
       'El ACSM recomienda subir la carga entre un 2 y un 10 % cuando puedes hacer 1 o 2 ' +
       'repeticiones más de las previstas. La app usa un criterio práctico: si completas todas ' +
       'las series en el máximo de tu rango, sugiere +2,5 kg en tren superior y +5 kg en tren ' +
-      'inferior. Es solo una sugerencia; si la técnica empeora, mantén el peso.',
+      'inferior (+5 lb y +10 lb si usas libras). Es solo una sugerencia; si la técnica ' +
+      'empeora, mantén el peso.',
     sources: ['acsm2009progression'],
   },
 };

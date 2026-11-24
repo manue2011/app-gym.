@@ -242,6 +242,25 @@ export const EXERCISE_MEDIA: Record<string, ExerciseMedia> = {
       licenseUrl: 'https://creativecommons.org/licenses/by-sa/4.0/',
     },
   },
+  'wide-grip-machine-dip': {
+    animation: require('../../assets/gifs/wide-grip-machine-dip.gif'),
+    frames: [
+      require('../../assets/gifs/wide-grip-machine-dip-1.webp'),
+      require('../../assets/gifs/wide-grip-machine-dip-2.webp'),
+    ],
+    imageCredit: {
+      source: 'App Gym',
+      author: 'ilustración propia',
+      license: 'CC BY-SA 4.0',
+      licenseUrl: 'https://creativecommons.org/licenses/by-sa/4.0/',
+    },
+    textCredit: {
+      source: 'App Gym',
+      author: 'texto propio',
+      license: 'CC BY-SA 4.0',
+      licenseUrl: 'https://creativecommons.org/licenses/by-sa/4.0/',
+    },
+  },
   'dumbbell-pullover': {
     animation: require('../../assets/gifs/dumbbell-pullover.gif'),
     frames: [
@@ -447,6 +466,25 @@ export const EXERCISE_MEDIA: Record<string, ExerciseMedia> = {
     textCredit: {
       source: 'Everkinetic',
       author: 'adaptado y traducido por App Gym',
+      license: 'CC BY-SA 4.0',
+      licenseUrl: 'https://creativecommons.org/licenses/by-sa/4.0/',
+    },
+  },
+  'wide-grip-seated-cable-row': {
+    animation: require('../../assets/gifs/wide-grip-seated-cable-row.gif'),
+    frames: [
+      require('../../assets/gifs/wide-grip-seated-cable-row-1.webp'),
+      require('../../assets/gifs/wide-grip-seated-cable-row-2.webp'),
+    ],
+    imageCredit: {
+      source: 'App Gym',
+      author: 'ilustración propia',
+      license: 'CC BY-SA 4.0',
+      licenseUrl: 'https://creativecommons.org/licenses/by-sa/4.0/',
+    },
+    textCredit: {
+      source: 'App Gym',
+      author: 'texto propio',
       license: 'CC BY-SA 4.0',
       licenseUrl: 'https://creativecommons.org/licenses/by-sa/4.0/',
     },
@@ -988,6 +1026,25 @@ export const EXERCISE_MEDIA: Record<string, ExerciseMedia> = {
     frames: [
       require('../../assets/gifs/cable-overhead-triceps-extension-1.webp'),
       require('../../assets/gifs/cable-overhead-triceps-extension-2.webp'),
+    ],
+    imageCredit: {
+      source: 'App Gym',
+      author: 'ilustración propia',
+      license: 'CC BY-SA 4.0',
+      licenseUrl: 'https://creativecommons.org/licenses/by-sa/4.0/',
+    },
+    textCredit: {
+      source: 'App Gym',
+      author: 'texto propio',
+      license: 'CC BY-SA 4.0',
+      licenseUrl: 'https://creativecommons.org/licenses/by-sa/4.0/',
+    },
+  },
+  'close-grip-machine-dip': {
+    animation: require('../../assets/gifs/close-grip-machine-dip.gif'),
+    frames: [
+      require('../../assets/gifs/close-grip-machine-dip-1.webp'),
+      require('../../assets/gifs/close-grip-machine-dip-2.webp'),
     ],
     imageCredit: {
       source: 'App Gym',

@@ -178,13 +178,79 @@ def machine_rear_delt_fly(opened):
     save(im, "own-machine-rear-delt-fly-" + ("tension" if opened else "relaxation") + ".png")
 
 
+# ---------- Seated dip machine, seen from the front: grip width tells chest from triceps ----------
+def machine_dip(wide, pressed):
+    im, d = canvas()
+    line(d, (20, 575), (580, 575), 4)
+    rect(d, (50, 60, 80, 575)); rect(d, (520, 60, 550, 575))  # machine frame
+    rect(d, (225, 120, 375, 420))  # backrest
+    rect(d, (200, 400, 400, 440))  # seat
+    shoulders = ((248, 215), (352, 215))
+    if wide:
+        if pressed:
+            arms = (((205, 300), (175, 375)), ((395, 300), (425, 375)))
+        else:
+            arms = (((165, 205), (150, 290)), ((435, 205), (450, 290)))
+    else:
+        if pressed:
+            arms = (((240, 300), (238, 380)), ((360, 300), (362, 380)))
+        else:
+            arms = (((205, 245), (232, 300)), ((395, 245), (368, 300)))
+    for sh, (elbow, hand), frame_x in zip(shoulders, arms, (80, 520)):
+        line(d, hand, (frame_x, hand[1] - 40), 10)  # lever arm to the frame
+    for hip, knee, foot in (((272, 410), (250, 455), (245, 565)), ((328, 410), (350, 455), (355, 565))):
+        capsule(d, hip, knee, 34); capsule(d, knee, foot, 28)
+    capsule(d, (300, 225), (300, 385), 92)
+    capsule(d, shoulders[0], shoulders[1], 44)
+    circle(d, (300, 140), 32)
+    for sh, (elbow, hand) in zip(shoulders, arms):
+        capsule(d, sh, elbow, 22); capsule(d, elbow, hand, 18)
+        line(d, (hand[0], hand[1] - 24), (hand[0], hand[1] + 24), 10)  # vertical grip
+    name = ("wide-grip" if wide else "close-grip") + "-machine-dip"
+    save(im, f"own-{name}-" + ("tension" if pressed else "relaxation") + ".png")
+
+
+# ---------- Wide-grip seated cable row, seen from behind: long bar and flared elbows ----------
+def wide_grip_seated_cable_row(pulled):
+    im, d = canvas()
+    rect(d, (255, 30, 345, 330))  # machine column with the weight stack
+    for y in range(60, 300, 24):
+        line(d, (262, y), (338, y), 3)
+    circle(d, (300, 330), 14)  # low pulley
+    rect(d, (220, 470, 380, 520))  # bench, towards the viewer
+    line(d, (240, 520), (240, 580), 8); line(d, (360, 520), (360, 580), 8)
+    line(d, (20, 582), (580, 582), 4)
+    shoulders = ((218, 300), (382, 300))
+    if pulled:
+        bar_y = 300
+        arms = (((140, 338), (160, bar_y)), ((460, 338), (440, bar_y)))
+    else:
+        bar_y = 232
+        arms = (((192, 268), (178, bar_y)), ((408, 268), (422, bar_y)))
+    line(d, (300, 330), (300, bar_y), 4)  # cable
+    line(d, (110, bar_y), (490, bar_y), 10)  # long bar
+    capsule(d, (300, 315), (300, 450), 124)  # back
+    capsule(d, shoulders[0], shoulders[1], 46)
+    circle(d, (300, 248), 33)
+    line(d, (300, 300), (300, 455), 3)  # spine
+    blades = 30 if pulled else 52  # shoulder blades squeeze together when pulling
+    for side in (-1, 1):
+        line(d, (300 + side * blades, 318), (300 + side * (blades + 8), 380), 3)
+    for sh, (elbow, hand) in zip(shoulders, arms):
+        capsule(d, sh, elbow, 22); capsule(d, elbow, hand, 18)
+    save(im, "own-wide-grip-seated-cable-row-" + ("tension" if pulled else "relaxation") + ".png")
+
+
 for f in (hip_thrust, hanging_leg_raise, face_pull, plate_front_raise,
-          cable_overhead_triceps_extension, machine_rear_delt_fly):
+          cable_overhead_triceps_extension, machine_rear_delt_fly, wide_grip_seated_cable_row):
     f(False); f(True)
+for wide in (True, False):
+    machine_dip(wide, False); machine_dip(wide, True)
 
 W = 220
 NAMES = ("hip-thrust", "hanging-leg-raise", "face-pull", "plate-front-raise",
-         "cable-overhead-triceps-extension", "machine-rear-delt-fly")
+         "cable-overhead-triceps-extension", "machine-rear-delt-fly", "wide-grip-seated-cable-row",
+         "wide-grip-machine-dip", "close-grip-machine-dip")
 sheet = Image.new("L", (W * 2, W * len(NAMES)), 255)
 for r, n in enumerate(NAMES):
     for c, k in enumerate(("relaxation", "tension")):

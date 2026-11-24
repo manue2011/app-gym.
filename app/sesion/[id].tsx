@@ -1,4 +1,5 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
+import * as Haptics from 'expo-haptics';
 import { useKeepAwake } from 'expo-keep-awake';
 import { router, Stack, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
@@ -26,6 +27,8 @@ import {
   getRoutineDay,
   type RoutineExercise,
 } from '../../src/db/repositories/routines';
+import { recordText } from '../../src/components/recordText';
+import { findRecord, getSetsBefore, type PersonalRecord } from '../../src/db/repositories/records';
 import {
   discardOpenWorkout,
   finishWorkout,
@@ -39,7 +42,9 @@ import {
 } from '../../src/db/repositories/workouts';
 import { suggestOverload } from '../../src/science/overload';
 import { MAX_RECOMMENDED_RIR } from '../../src/science/rules';
+import { useWeightUnit } from '../../src/store/settings';
 import { useColors } from '../../src/theme';
+import { formatWeight, formatWeightUnit, parseWeightToKg } from '../../src/units';
 
 interface Draft {
   weight: string;
@@ -47,9 +52,8 @@ interface Draft {
   rir: string;
 }
 
-const parseDecimal = (s: string) => (s.trim() === '' ? NaN : Number(s.replace(',', '.')));
+const parseInteger = (s: string) => (s.trim() === '' ? NaN : Number(s));
 const parseOptionalInt = (s: string) => (s.trim() === '' ? null : Number(s));
-const formatKg = (kg: number) => String(kg).replace('.', ',');
 const restEndsAt = (seconds: number) => Date.now() + seconds * 1000;
 
 interface SessionData {
@@ -58,28 +62,40 @@ interface SessionData {
   exercises: RoutineExercise[];
   sets: WorkoutSet[];
   last: Record<number, WorkoutSet[]>;
+  /** Record beaten today per exercise, compared with every earlier workout. */
+  records: Record<number, PersonalRecord | null>;
 }
 
 export default function SessionScreen() {
   useKeepAwake();
   const db = useSQLiteContext();
   const c = useColors();
+  const unit = useWeightUnit();
   const workoutId = Number(useLocalSearchParams<{ id: string }>().id);
   const [data, setData] = useState<SessionData | null>(null);
   const [drafts, setDrafts] = useState<Record<string, Draft>>({});
   const [extraSets, setExtraSets] = useState<Record<number, number>>({});
   const [restEndAt, setRestEndAt] = useState<number | null>(null);
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (): Promise<SessionData | null> => {
     const workout = await getWorkout(db, workoutId);
-    if (!workout) return;
+    if (!workout) return null;
     const day = workout.routine_day_id ? await getRoutineDay(db, workout.routine_day_id) : null;
     const exercises = day?.exercises ?? [];
     const sets = await getWorkoutSets(db, workoutId);
     const last: Record<number, WorkoutSet[]> = {};
-    for (const e of exercises)
+    const records: Record<number, PersonalRecord | null> = {};
+    for (const e of exercises) {
       last[e.exercise_id] = await getLastPerformance(db, e.exercise_id, workoutId);
-    setData({ workout, title: day?.name ?? 'Entrenamiento', exercises, sets, last });
+      records[e.exercise_id] = findRecord(
+        e.exercise_id,
+        sets.filter((s) => s.exercise_id === e.exercise_id),
+        await getSetsBefore(db, e.exercise_id, workoutId),
+      );
+    }
+    const next = { workout, title: day?.name ?? 'Entrenamiento', exercises, sets, last, records };
+    setData(next);
+    return next;
   }, [db, workoutId]);
 
   useFocusEffect(
@@ -105,7 +121,7 @@ export default function SessionScreen() {
       prefillFor(lastTime, setNumber);
     return source
       ? {
-          weight: formatKg(source.weight_kg),
+          weight: formatWeight(source.weight_kg, unit),
           reps: String(source.reps),
           rir: source.rir === null ? '' : String(source.rir),
         }
@@ -126,8 +142,8 @@ export default function SessionScreen() {
         workout_id: workoutId,
         exercise_id: ex.exercise_id,
         set_number: setNumber,
-        weight_kg: parseDecimal(d.weight),
-        reps: parseDecimal(d.reps),
+        weight_kg: parseWeightToKg(d.weight, unit),
+        reps: parseInteger(d.reps),
         rir: parseOptionalInt(d.rir),
       });
     } catch (e) {
@@ -135,7 +151,12 @@ export default function SessionScreen() {
       return;
     }
     setDrafts(({ [`${ex.exercise_id}:${setNumber}`]: _saved, ...rest }) => rest);
-    await load();
+    const before = data.records[ex.exercise_id];
+    const after = (await load())?.records[ex.exercise_id];
+    const newRecord =
+      after && (!before || after.weight_kg !== before.weight_kg || after.reps !== before.reps);
+    if (newRecord) Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    else Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     if (ex.rest_seconds > 0) setRestEndAt(restEndsAt(ex.rest_seconds));
   };
 
@@ -170,7 +191,7 @@ export default function SessionScreen() {
         text: 'Terminar',
         onPress: async () => {
           await finishWorkout(db, workoutId);
-          router.back();
+          router.replace({ pathname: '/resumen/[id]', params: { id: String(workoutId) } });
         },
       },
     ]);
@@ -202,7 +223,8 @@ export default function SessionScreen() {
           );
           const rows = Math.max(ex.target_sets + (extraSets[ex.exercise_id] ?? 0), maxLogged);
           const last = data.last[ex.exercise_id] ?? [];
-          const suggestion = suggestOverload(last, ex);
+          const suggestion = suggestOverload(last, ex, unit);
+          const record = data.records[ex.exercise_id];
           const highRir = data.sets.some(
             (s) =>
               s.exercise_id === ex.exercise_id && s.rir !== null && s.rir > MAX_RECOMMENDED_RIR,
@@ -233,7 +255,9 @@ export default function SessionScreen() {
               {last.length > 0 ? (
                 <Muted>
                   Última vez:{' '}
-                  {last.map((s) => `${formatKg(s.weight_kg)} kg × ${s.reps}`).join(' · ')}
+                  {last
+                    .map((s) => `${formatWeightUnit(s.weight_kg, unit)} × ${s.reps}`)
+                    .join(' · ')}
                 </Muted>
               ) : (
                 <Muted>Primera vez con este ejercicio.</Muted>
@@ -243,7 +267,8 @@ export default function SessionScreen() {
                 <View style={[styles.hint, { backgroundColor: c.chip }]}>
                   <Text style={{ color: c.text }}>
                     💡 La última vez llegaste a {ex.rep_max} reps en todas las series. Puedes probar
-                    con {formatKg(suggestion.toKg)} kg (antes {formatKg(suggestion.fromKg)} kg).
+                    con {formatWeightUnit(suggestion.toKg, unit)} (antes{' '}
+                    {formatWeightUnit(suggestion.fromKg, unit)}).
                   </Text>
                   <View style={styles.hintActions}>
                     {pending.length > 0 && (
@@ -252,16 +277,25 @@ export default function SessionScreen() {
                         hitSlop={8}
                         onPress={() =>
                           pending.forEach((n) =>
-                            editDraft(ex.exercise_id, n, { weight: formatKg(suggestion.toKg) }),
+                            editDraft(ex.exercise_id, n, {
+                              weight: formatWeight(suggestion.toKg, unit),
+                            }),
                           )
                         }>
                         <Text style={{ color: c.primary, fontWeight: '700' }}>
-                          Usar {formatKg(suggestion.toKg)} kg
+                          Usar {formatWeightUnit(suggestion.toKg, unit)}
                         </Text>
                       </Pressable>
                     )}
                     <WhyLink rule="overload" />
                   </View>
+                </View>
+              )}
+              {record && (
+                <View style={[styles.hint, { backgroundColor: c.chip }]}>
+                  <Text style={{ color: c.text, fontWeight: '600' }}>
+                    {recordText(record, unit)}
+                  </Text>
                 </View>
               )}
               {highRir && (
@@ -278,7 +312,7 @@ export default function SessionScreen() {
 
               <View style={styles.headerRow}>
                 <Text style={[styles.colSet, styles.colLabel, { color: c.muted }]}>Serie</Text>
-                <Text style={[styles.colInput, styles.colLabel, { color: c.muted }]}>kg</Text>
+                <Text style={[styles.colInput, styles.colLabel, { color: c.muted }]}>{unit}</Text>
                 <Text style={[styles.colInput, styles.colLabel, { color: c.muted }]}>Reps</Text>
                 <Text style={[styles.colInput, styles.colLabel, { color: c.muted }]}>RIR</Text>
                 <View style={styles.colCheck} />

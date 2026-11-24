@@ -23,7 +23,11 @@ const x = (slug: string, target_sets = 4, notes?: string): TemplateExercise => (
 
 const FACE_PULL = x('face-pull', 4, 'Polea alta, tirando de la cuerda hacia la frente.');
 const BICEPS = [x('dumbbell-curl'), x('hammer-curl'), x('preacher-curl')];
-const TRICEPS = [x('rope-pushdown'), x('cable-overhead-triceps-extension')];
+const TRICEPS = [
+  x('rope-pushdown'),
+  x('cable-overhead-triceps-extension'),
+  x('close-grip-machine-dip', 4, 'Asas giradas hacia dentro y codos pegados al cuerpo.'),
+];
 const SHOULDERS = [
   x('machine-rear-delt-fly'),
   FACE_PULL,
@@ -47,6 +51,7 @@ export const ROUTINE_TEMPLATES: RoutineTemplate[] = [
             'Misma barra larga, manos mirando hacia ti y agarre más cerrado.',
           ),
           x('seated-cable-row'),
+          x('wide-grip-seated-cable-row', 4, 'Barra larga, manos más abiertas que los hombros.'),
           x('machine-rear-delt-fly'),
           FACE_PULL,
           ...BICEPS,
@@ -59,6 +64,7 @@ export const ROUTINE_TEMPLATES: RoutineTemplate[] = [
           x('pec-deck'),
           x('machine-chest-press', 4, 'Máquina "Wide chest press".'),
           x('bench-press'),
+          x('wide-grip-machine-dip', 4, 'Asas giradas hacia fuera y codos algo abiertos.'),
           x('machine-shoulder-press'),
           x('plate-front-raise'),
           ...TRICEPS,

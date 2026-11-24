@@ -38,6 +38,11 @@ export default function RootLayout() {
           options={{ title: 'Ejercicio', presentation: 'modal' }}
         />
         <Stack.Screen name="por-que" options={{ title: '¿Por qué?', presentation: 'modal' }} />
+        <Stack.Screen name="ajustes" options={{ title: 'Ajustes', presentation: 'modal' }} />
+        <Stack.Screen
+          name="resumen/[id]"
+          options={{ title: 'Resumen', gestureEnabled: false, headerBackVisible: false }}
+        />
         <Stack.Screen
           name="sesion/[id]"
           options={{ title: 'Entrenamiento', gestureEnabled: false }}

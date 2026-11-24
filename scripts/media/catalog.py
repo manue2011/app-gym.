@@ -13,6 +13,7 @@ CATALOG = [
  ("pec-deck","Contractora de pecho (pec deck)","chest",[],"machine","0047"),
  ("push-up","Flexiones","chest",["triceps","shoulders"],"bodyweight","0077"),
  ("dips","Fondos en paralelas","chest",["triceps","shoulders"],"bodyweight","0054"),
+ ("wide-grip-machine-dip","Fondos en máquina agarre abierto (pecho)","chest",["triceps","shoulders"],"machine",None),
  ("dumbbell-pullover","Pullover con mancuerna","chest",["back"],"dumbbell","0079"),
  # Espalda
  ("pull-up","Dominadas","back",["biceps"],"bodyweight","0087"),
@@ -25,6 +26,7 @@ CATALOG = [
  ("reverse-grip-barbell-row","Remo con barra agarre supino","back",["biceps"],"barbell","0026"),
  ("one-arm-dumbbell-row","Remo con mancuerna a una mano","back",["biceps"],"dumbbell","0024"),
  ("seated-cable-row","Remo sentado en polea","back",["biceps","traps"],"cable","0025"),
+ ("wide-grip-seated-cable-row","Remo sentado en polea agarre amplio","back",["shoulders","traps","biceps"],"cable",None),
  ("t-bar-row","Remo en barra T","back",["biceps","traps"],"barbell","0029"),
  ("deadlift","Peso muerto con barra","back",["glutes","hamstrings","quads"],"barbell","0099"),
  ("hyperextension","Hiperextensiones","back",["glutes","hamstrings"],"other","0103"),
@@ -57,6 +59,7 @@ CATALOG = [
  ("rope-pushdown","Extensión de tríceps en polea con cuerda","triceps",[],"cable","0206"),
  ("overhead-triceps-extension","Extensión de tríceps sobre la cabeza","triceps",[],"dumbbell","0198"),
  ("cable-overhead-triceps-extension","Extensión de tríceps sobre la cabeza en polea (de espaldas)","triceps",[],"cable",None),
+ ("close-grip-machine-dip","Fondos en máquina agarre cerrado (tríceps)","triceps",["chest","shoulders"],"machine",None),
  ("skull-crusher","Press francés con barra","triceps",[],"barbell","0180"),
  ("close-grip-bench-press","Press de banca agarre cerrado","triceps",["chest","shoulders"],"barbell","0049"),
  ("triceps-kickback","Patada de tríceps con mancuerna","triceps",[],"dumbbell","0204"),

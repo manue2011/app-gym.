@@ -126,8 +126,8 @@ Solo se aceptan animaciones propias, encargadas o con licencia que permita uso c
   [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/).
 - **Ilustraciones propias de App Gym** — para los ejercicios sin imagen libre
   (face pull, hip thrust, elevación de piernas colgado, aperturas inversas en máquina,
-  elevación frontal con disco y extensión de tríceps sobre la cabeza en polea). Se publican
-  también bajo CC BY-SA 4.0.
+  elevación frontal con disco, extensión de tríceps sobre la cabeza en polea, remo sentado
+  en polea con agarre amplio y fondos en máquina con agarre abierto y cerrado). Se publican también bajo CC BY-SA 4.0.
 
 ## Obras derivadas
 
